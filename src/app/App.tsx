@@ -1,12 +1,12 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
 import tw from 'twrnc';
-import ButtonScreen from './screens/ButtonScreen/ButtonScreen';
-import ListScreen from './screens/ListScreen/ListScreen';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+
+import ButtonScreen from '../screens/ButtonScreen/ButtonScreen';
+import ListScreen from '../screens/ListScreen/ListScreen';
+import Interval from '../screens/Interval/Interval';
+
 
 const Tab = createBottomTabNavigator();
 
@@ -29,6 +29,11 @@ export default function App() {
           name="List" 
           component={ListScreen}
           options={{ tabBarLabel: 'Список' }}
+        />
+        <Tab.Screen 
+          name="Interval" 
+          component={Interval}
+          options={{ tabBarLabel: 'Интервал' }}
         />
       </Tab.Navigator>
     </NavigationContainer>
