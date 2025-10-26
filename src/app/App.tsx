@@ -3,8 +3,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import tw from 'twrnc';
 
-import ButtonScreen from '../screens/ButtonScreen/ButtonScreen';
-import ListScreen from '../screens/ListScreen/ListScreen';
 import Interval from '../screens/Interval/Interval';
 
 
@@ -20,16 +18,6 @@ export default function App() {
           tabBarInactiveTintColor: '#9CA3AF',
         }}
       >
-        <Tab.Screen 
-          name="Buttons" 
-          component={ButtonScreen}
-          options={{ tabBarLabel: 'Кнопки' }}
-        />
-        <Tab.Screen 
-          name="List" 
-          component={ListScreen}
-          options={{ tabBarLabel: 'Список' }}
-        />
         <Tab.Screen 
           name="Interval" 
           component={Interval}
