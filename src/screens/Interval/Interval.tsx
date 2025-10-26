@@ -12,10 +12,6 @@ import IntervalList from './components/IntervalList';
 import IntervalForm from './components/IntervalForm';
 import { TimeIntervalStorage, IntervalFormDataType, TimeIntervalType } from '../../app/storage';
 
-// ДОБАВЬ ЭТУ ПРОВЕРКУ
-console.log('TimeIntervalStorage imported:', TimeIntervalStorage);
-console.log('All imports:', { TimeIntervalStorage });
-
 interface TimeIntervalsPageProps {}
 
 const Interval: React.FC<TimeIntervalsPageProps> = () => {
@@ -24,16 +20,17 @@ const Interval: React.FC<TimeIntervalsPageProps> = () => {
   const [editingInterval, setEditingInterval] = useState<TimeIntervalType | null>(null);
 
   useEffect(() => {
-    // ДОБАВЬ ЭТУ ПРОВЕРКУ
-    console.log('In useEffect - TimeIntervalStorage:', TimeIntervalStorage);
     loadIntervals();
   }, []);
 
-  const loadIntervals = (): void => {
-    // ДОБАВЬ ЭТУ ПРОВЕРКУ
-    console.log('In loadIntervals - TimeIntervalStorage:', TimeIntervalStorage);
-    const loadedIntervals = TimeIntervalStorage.getAllIntervals();
-    setIntervals(loadedIntervals);
+  // ИЗМЕНИЛ - добавил async
+  const loadIntervals = async (): Promise<void> => {
+    try {
+      const loadedIntervals = await TimeIntervalStorage.getAllIntervals();
+      setIntervals(loadedIntervals);
+    } catch (error) {
+      console.error('Error loading intervals:', error);
+    }
   };
 
   const handleAddInterval = (): void => {
@@ -46,26 +43,36 @@ const Interval: React.FC<TimeIntervalsPageProps> = () => {
     setIsFormVisible(true);
   };
 
-  const handleDeleteInterval = (id: string): void => {
-    const success = TimeIntervalStorage.deleteInterval(id);
-    if (success) {
-      loadIntervals();
+  // ИЗМЕНИЛ - добавил async
+  const handleDeleteInterval = async (id: string): Promise<void> => {
+    try {
+      const success = await TimeIntervalStorage.deleteInterval(id);
+      if (success) {
+        await loadIntervals(); // перезагружаем список
+      }
+    } catch (error) {
+      console.error('Error deleting interval:', error);
     }
   };
 
-  const handleSaveInterval = (intervalData: IntervalFormDataType): void => {
-    let success: boolean;
-    
-    if (editingInterval) {
-      // Редактирование существующего интервала
-      success = TimeIntervalStorage.updateInterval(editingInterval.id, intervalData);
-    } else {
-      // Добавление нового интервала
-      success = TimeIntervalStorage.addInterval(intervalData);
-    }
+  // ИЗМЕНИЛ - добавил async
+  const handleSaveInterval = async (intervalData: IntervalFormDataType): Promise<void> => {
+    try {
+      let success: boolean;
+      
+      if (editingInterval) {
+        // Редактирование существующего интервала
+        success = await TimeIntervalStorage.updateInterval(editingInterval.id, intervalData);
+      } else {
+        // Добавление нового интервала
+        success = await TimeIntervalStorage.addInterval(intervalData);
+      }
 
-    if (success) {
-      loadIntervals();
+      if (success) {
+        await loadIntervals(); // перезагружаем список
+      }
+    } catch (error) {
+      console.error('Error saving interval:', error);
     }
   };
 
@@ -114,8 +121,7 @@ const Interval: React.FC<TimeIntervalsPageProps> = () => {
   );
 };
 
-export default Interval;
-
+// Стили остаются без изменений
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -176,3 +182,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+export default Interval;

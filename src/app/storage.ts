@@ -1,31 +1,6 @@
-import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Создаем fallback хранилище
-const createFallbackStorage = () => {
-  let memoryStorage: { [key: string]: string } = {};
-  return {
-    set: (key: string, value: string) => { 
-      memoryStorage[key] = value; 
-    },
-    getString: (key: string) => memoryStorage[key],
-    contains: (key: string) => key in memoryStorage,
-    delete: (key: string) => { delete memoryStorage[key]; },
-    clearAll: () => { memoryStorage = {}; },
-    getAllKeys: () => Object.keys(memoryStorage),
-  };
-};
-
-// Пытаемся создать MMKV, если не получается - используем fallback
-let storage: any;
-
-try {
-  storage = new MMKV();
-  console.log('MMKV initialized successfully');
-} catch (error) {
-  console.log('MMKV failed, using fallback storage:', error);
-  storage = createFallbackStorage();
-}
-
+// Типы остаются точно такие же
 export type TimeIntervalType = {
   id: string;
   name: string;
@@ -48,9 +23,10 @@ export const StorageKeys = {
 } as const;
 
 export const TimeIntervalStorage = {
-  getAllIntervals: (): TimeIntervalType[] => {
+  // Получить все интервалы
+  getAllIntervals: async (): Promise<TimeIntervalType[]> => {
     try {
-      const intervals = storage.getString(StorageKeys.TIME_INTERVALS);
+      const intervals = await AsyncStorage.getItem(StorageKeys.TIME_INTERVALS);
       return intervals ? JSON.parse(intervals) : [];
     } catch (error) {
       console.error('Error getting intervals:', error);
@@ -58,9 +34,10 @@ export const TimeIntervalStorage = {
     }
   },
 
-  saveAllIntervals: (intervals: TimeIntervalType[]): boolean => {
+  // Сохранить все интервалы
+  saveAllIntervals: async (intervals: TimeIntervalType[]): Promise<boolean> => {
     try {
-      storage.set(StorageKeys.TIME_INTERVALS, JSON.stringify(intervals));
+      await AsyncStorage.setItem(StorageKeys.TIME_INTERVALS, JSON.stringify(intervals));
       return true;
     } catch (error) {
       console.error('Error saving intervals:', error);
@@ -68,39 +45,63 @@ export const TimeIntervalStorage = {
     }
   },
 
-  addInterval: (interval: Omit<IntervalFormDataType, 'id'>): boolean => {
-    const intervals = TimeIntervalStorage.getAllIntervals();
-    const newInterval: TimeIntervalType = {
-      ...interval,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-    intervals.push(newInterval);
-    return TimeIntervalStorage.saveAllIntervals(intervals);
-  },
-
-  updateInterval: (id: string, updatedInterval: Partial<IntervalFormDataType>): boolean => {
-    const intervals = TimeIntervalStorage.getAllIntervals();
-    const index = intervals.findIndex(interval => interval.id === id);
-    if (index !== -1) {
-      intervals[index] = { 
-        ...intervals[index], 
-        ...updatedInterval, 
-        updatedAt: new Date().toISOString() 
+  // Добавить новый интервал
+  addInterval: async (interval: Omit<IntervalFormDataType, 'id'>): Promise<boolean> => {
+    try {
+      const intervals = await TimeIntervalStorage.getAllIntervals();
+      const newInterval: TimeIntervalType = {
+        ...interval,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString(),
       };
-      return TimeIntervalStorage.saveAllIntervals(intervals);
+      intervals.push(newInterval);
+      return await TimeIntervalStorage.saveAllIntervals(intervals);
+    } catch (error) {
+      console.error('Error adding interval:', error);
+      return false;
     }
-    return false;
   },
 
-  deleteInterval: (id: string): boolean => {
-    const intervals = TimeIntervalStorage.getAllIntervals();
-    const filteredIntervals = intervals.filter(interval => interval.id !== id);
-    return TimeIntervalStorage.saveAllIntervals(filteredIntervals);
+  // Обновить интервал
+  updateInterval: async (id: string, updatedInterval: Partial<IntervalFormDataType>): Promise<boolean> => {
+    try {
+      const intervals = await TimeIntervalStorage.getAllIntervals();
+      const index = intervals.findIndex(interval => interval.id === id);
+      if (index !== -1) {
+        intervals[index] = { 
+          ...intervals[index], 
+          ...updatedInterval, 
+          updatedAt: new Date().toISOString() 
+        };
+        return await TimeIntervalStorage.saveAllIntervals(intervals);
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating interval:', error);
+      return false;
+    }
   },
 
-  getIntervalById: (id: string): TimeIntervalType | undefined => {
-    const intervals = TimeIntervalStorage.getAllIntervals();
-    return intervals.find(interval => interval.id === id);
+  // Удалить интервал
+  deleteInterval: async (id: string): Promise<boolean> => {
+    try {
+      const intervals = await TimeIntervalStorage.getAllIntervals();
+      const filteredIntervals = intervals.filter(interval => interval.id !== id);
+      return await TimeIntervalStorage.saveAllIntervals(filteredIntervals);
+    } catch (error) {
+      console.error('Error deleting interval:', error);
+      return false;
+    }
+  },
+
+  // Найти интервал по ID
+  getIntervalById: async (id: string): Promise<TimeIntervalType | undefined> => {
+    try {
+      const intervals = await TimeIntervalStorage.getAllIntervals();
+      return intervals.find(interval => interval.id === id);
+    } catch (error) {
+      console.error('Error getting interval by id:', error);
+      return undefined;
+    }
   },
 };
