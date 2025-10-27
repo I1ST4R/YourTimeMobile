@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -8,32 +7,21 @@ import {
   StatusBar,
 } from 'react-native';
 
-import IntervalList from './components/IntervalList';
 import IntervalForm from '../modules/IntervalForm/IntervalForm';
-import { StoreIntervalType, TimeIntervalStorage } from '../shared/storage';
 import { useAppDispatch } from '../app/store';
-import { changeCurrentInterval, changeTypeOnCreate, closeForm, openForm } from '../modules/IntervalForm/form.slice';
+import { changeTypeOnCreate, openForm } from '../modules/IntervalForm/form.slice';
 import { useSelector } from 'react-redux';
-import { loadIntervals, selectIntervals, selectIntervalsCount } from '../modules/IntervalList/interval.slice';
+import { selectIntervalsCount } from '../modules/IntervalList/interval.slice';
+import IntervalList from '../modules/IntervalList/IntervalList';
 
 const Interval = () => {
   const dispatch = useAppDispatch()
-  dispatch(loadIntervals())
-  const intervals = useSelector(selectIntervals)
+  
   const intervalsLength = useSelector(selectIntervalsCount)
 
   const handleAddInterval = (): void => {
     dispatch(changeTypeOnCreate())
     dispatch(openForm())
-  };
-
-  const handleEditInterval = (interval: StoreIntervalType): void => {
-    dispatch(changeCurrentInterval(interval));
-    dispatch(openForm())
-  };
-
-  const handleFormClose = (): void => {
-    dispatch(closeForm());
   };
 
   return (

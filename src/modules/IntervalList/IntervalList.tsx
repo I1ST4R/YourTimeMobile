@@ -5,20 +5,16 @@ import {
   FlatList,
   StyleSheet,
 } from 'react-native';
-import { StoreIntervalType } from '../../../shared/storage';
+import { useAppDispatch } from '../../app/store';
+import { loadIntervals, selectIntervals } from './interval.slice';
+import { useSelector } from 'react-redux';
 import IntervalItem from './IntervalItem';
 
-interface IntervalListProps {
-  intervals: StoreIntervalType[];
-  onEditInterval: (interval: StoreIntervalType) => void;
-  onDeleteInterval: (id: string) => void;
-}
+const IntervalList = () => {
+  const dispatch = useAppDispatch()
+  dispatch(loadIntervals())
+  const intervals = useSelector(selectIntervals)
 
-const IntervalList: React.FC<IntervalListProps> = ({
-  intervals,
-  onEditInterval,
-  onDeleteInterval,
-}) => {
   if (intervals.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -33,11 +29,7 @@ const IntervalList: React.FC<IntervalListProps> = ({
       data={intervals}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <IntervalItem
-          interval={item}
-          onEdit={onEditInterval}
-          onDelete={onDeleteInterval}
-        />
+        <IntervalItem interval={item}/>
       )}
       style={styles.list}
       contentContainerStyle={styles.listContent}
