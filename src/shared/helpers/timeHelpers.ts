@@ -1,52 +1,41 @@
-// Форматирование времени для отображения
-export const formatTime = (date: Date): string => {
-  return date.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
+export const formatDateTime = (day: Date, time: string): string => {
+  const dateString = day.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
   });
+  return `${dateString} ${time}`;
 };
 
-// Форматирование даты
-export const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('ru-RU');
-};
+const getFullDate = (day: Date,time: string) => {
+  const dateTime = new Date(day)
+  const [startHours, startMinutes, startSeconds] = time.split(':').map(Number)
+  dateTime.setHours(startHours, startMinutes, startSeconds)
+  return dateTime
+}
 
-// Расчет длительности интервала
-export const calculateDuration = (startTime: string, endTime: string): string => {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  const diffMs = end.getTime() - start.getTime();
+export const calculateDuration = (
+  startDay: Date, 
+  startTime: string, 
+  endDay: Date, 
+  endTime: string
+): string => {
+
+  const startDateTime = getFullDate(startDay, startTime)
+  const endDateTime = getFullDate(endDay, endTime)
   
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+  const diffMs = endDateTime.getTime() - startDateTime.getTime();
+  
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
   
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
 
-// Валидация интервала
-export const validateInterval = (startTime: string, endTime: string): { isValid: boolean; error: string | null } => {
-  if (!startTime || !endTime) {
-    return { isValid: false, error: 'Оба времени должны быть заполнены' };
-  }
-  
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  
-  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-    return { isValid: false, error: 'Неверный формат времени' };
-  }
-  
-  if (end <= start) {
-    return { isValid: false, error: 'Время окончания должно быть позже времени начала' };
-  }
-  
-  return { isValid: true, error: null };
-};
-
-// Получить текущее время в формате для input
-export const getCurrentDateTime = (): string => {
-  return new Date().toISOString().slice(0, 16);
+export const getCurrentDate = (): Date => {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0); 
+  return date;
 };

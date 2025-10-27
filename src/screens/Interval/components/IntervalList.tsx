@@ -5,12 +5,12 @@ import {
   FlatList,
   StyleSheet,
 } from 'react-native';
-import { TimeIntervalType } from '../../../app/storage';
+import { StoreIntervalType } from '../../../shared/storage';
 import IntervalItem from './IntervalItem';
 
 interface IntervalListProps {
-  intervals: TimeIntervalType[];
-  onEditInterval: (interval: TimeIntervalType) => void;
+  intervals: StoreIntervalType[];
+  onEditInterval: (interval: StoreIntervalType) => void;
   onDeleteInterval: (id: string) => void;
 }
 

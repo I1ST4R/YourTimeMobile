@@ -9,21 +9,23 @@ import {
 } from 'react-native';
 
 import IntervalList from './components/IntervalList';
-import IntervalForm from './components/IntervalForm';
-import { TimeIntervalStorage, IntervalFormDataType, TimeIntervalType } from '../../app/storage';
+import IntervalForm from '../../modules/IntervalForm/IntervalForm';
+import { StoreIntervalType, TimeIntervalStorage } from '../../shared/storage';
+import { useAppDispatch } from '../../app/store';
+import { changeCurrentInterval, changeTypeOnCreate, openForm } from '../../modules/IntervalForm/form.slice';
 
 interface TimeIntervalsPageProps {}
 
 const Interval: React.FC<TimeIntervalsPageProps> = () => {
-  const [intervals, setIntervals] = useState<TimeIntervalType[]>([]);
+  const [intervals, setIntervals] = useState<StoreIntervalType[]>([]);
   const [isFormVisible, setIsFormVisible] = useState<boolean>(false);
-  const [editingInterval, setEditingInterval] = useState<TimeIntervalType | null>(null);
+  // const [editingInterval, setEditingInterval] = useState<StoreIntervalType | null>(null);
+  const dispatch = useAppDispatch()
 
   useEffect(() => {
     loadIntervals();
   }, []);
 
-  // ИЗМЕНИЛ - добавил async
   const loadIntervals = async (): Promise<void> => {
     try {
       const loadedIntervals = await TimeIntervalStorage.getAllIntervals();
@@ -34,16 +36,15 @@ const Interval: React.FC<TimeIntervalsPageProps> = () => {
   };
 
   const handleAddInterval = (): void => {
-    setEditingInterval(null);
-    setIsFormVisible(true);
+    dispatch(changeTypeOnCreate())
+    dispatch(openForm())
   };
 
-  const handleEditInterval = (interval: TimeIntervalType): void => {
-    setEditingInterval(interval);
-    setIsFormVisible(true);
+  const handleEditInterval = (interval: StoreIntervalType): void => {
+    dispatch(changeCurrentInterval(interval));
+    dispatch(openForm())
   };
 
-  // ИЗМЕНИЛ - добавил async
   const handleDeleteInterval = async (id: string): Promise<void> => {
     try {
       const success = await TimeIntervalStorage.deleteInterval(id);
@@ -52,27 +53,6 @@ const Interval: React.FC<TimeIntervalsPageProps> = () => {
       }
     } catch (error) {
       console.error('Error deleting interval:', error);
-    }
-  };
-
-  // ИЗМЕНИЛ - добавил async
-  const handleSaveInterval = async (intervalData: IntervalFormDataType): Promise<void> => {
-    try {
-      let success: boolean;
-      
-      if (editingInterval) {
-        // Редактирование существующего интервала
-        success = await TimeIntervalStorage.updateInterval(editingInterval.id, intervalData);
-      } else {
-        // Добавление нового интервала
-        success = await TimeIntervalStorage.addInterval(intervalData);
-      }
-
-      if (success) {
-        await loadIntervals(); // перезагружаем список
-      }
-    } catch (error) {
-      console.error('Error saving interval:', error);
     }
   };
 
@@ -114,8 +94,8 @@ const Interval: React.FC<TimeIntervalsPageProps> = () => {
       <IntervalForm
         visible={isFormVisible}
         onClose={handleFormClose}
-        onSave={handleSaveInterval}
-        editingInterval={editingInterval}
+        // onSave={handleSaveInterval}
+        // editingInterval={editingInterval}
       />
     </SafeAreaView>
   );

@@ -7,11 +7,11 @@ import {
   Alert,
 } from 'react-native';
 import { calculateDuration, formatDate, formatTime } from '../../../shared/helpers/timeHelpers';
-import { TimeIntervalType } from '../../../app/storage';
+import { StoreIntervalType } from '../../../shared/storage';
 
 interface IntervalItemProps {
-  interval: TimeIntervalType;
-  onEdit: (interval: TimeIntervalType) => void;
+  interval: StoreIntervalType;
+  onEdit: (interval: StoreIntervalType) => void;
   onDelete: (id: string) => void;
 }
 

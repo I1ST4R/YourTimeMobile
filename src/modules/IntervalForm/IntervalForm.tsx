@@ -9,40 +9,17 @@ import {
   Modal,
 } from 'react-native';
 
-import {
-  formatTime,
-  validateInterval,
-} from '../../../shared/helpers/timeHelpers';
-import { IntervalFormDataType, TimeIntervalType } from '../../../app/storage';
+import { validateInterval } from '../../shared/helpers/timeHelpers';
+import { FormIntervalType } from '../../shared/storage';
+import { useSelector } from 'react-redux';
+import { selectCurrentInterval } from './form.slice';
 
-interface IntervalFormProps {
-  visible: boolean;
-  onClose: () => void;
-  onSave: (data: IntervalFormDataType) => void;
-  editingInterval?: TimeIntervalType | null;
-}
-
-const IntervalForm: React.FC<IntervalFormProps> = ({
-  visible,
-  onClose,
-  onSave,
-  editingInterval,
-}) => {
+const IntervalForm = () => {
   const [name, setName] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
   const [description, setDescription] = useState<string>('');
-
-  useEffect(() => {
-    if (editingInterval) {
-      setName(editingInterval.name || '');
-      setStartTime(editingInterval.startTime || '');
-      setEndTime(editingInterval.endTime || '');
-      setDescription(editingInterval.description || '');
-    } else {
-      resetForm();
-    }
-  }, [editingInterval, visible]);
+  const curInterval = useSelector(selectCurrentInterval);
 
   const resetForm = (): void => {
     setName('');
@@ -51,6 +28,15 @@ const IntervalForm: React.FC<IntervalFormProps> = ({
     setDescription('');
   };
 
+  if (curInterval) {
+    setName(curInterval.name || '');
+    setStartTime(curInterval.startTime || '');
+    setEndTime(curInterval.endTime || '');
+    setDescription(curInterval.description || '');
+  } else {
+    resetForm();
+  }
+
   const handleSave = (): void => {
     const validation = validateInterval(startTime, endTime);
     if (!validation.isValid) {
@@ -58,7 +44,7 @@ const IntervalForm: React.FC<IntervalFormProps> = ({
       return;
     }
 
-    const intervalData: IntervalFormDataType = {
+    const intervalData: FormIntervalType = {
       name: name.trim() || `Интервал ${formatTime(new Date())}`,
       startTime,
       endTime,
