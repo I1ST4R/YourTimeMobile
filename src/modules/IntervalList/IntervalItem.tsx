@@ -6,21 +6,22 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { calculateDuration, formatDate, formatTime } from '../../../shared/helpers/timeHelpers';
-import { StoreIntervalType } from '../../../shared/storage';
 
-interface IntervalItemProps {
-  interval: StoreIntervalType;
-  onEdit: (interval: StoreIntervalType) => void;
-  onDelete: (id: string) => void;
-}
+import { useAppDispatch } from '../../app/store';
+import { deleteInterval } from './interval.slice';
+import { changeCurrentInterval, openForm } from '../IntervalForm/form.slice';
+import { StoreIntervalType } from '../../shared/storage';
+import { calculateDuration } from './timeHelpers';
 
-const IntervalItem: React.FC<IntervalItemProps> = ({ 
-  interval, 
-  onEdit, 
-  onDelete 
-}) => {
-  const handleDelete = (): void => {
+const IntervalItem = ({ interval } : {interval: StoreIntervalType}) => {
+  const dispatch = useAppDispatch()
+
+  const handleEditInterval = () => {
+    dispatch(changeCurrentInterval(interval));
+    dispatch(openForm())
+  };
+
+  const handleDelete = () => {
     Alert.alert(
       'Удаление интервала',
       'Вы уверены, что хотите удалить этот интервал?',
@@ -29,37 +30,39 @@ const IntervalItem: React.FC<IntervalItemProps> = ({
         { 
           text: 'Удалить', 
           style: 'destructive',
-          onPress: () => onDelete(interval.id)
+          onPress: () => dispatch(deleteInterval(interval.id))
         },
       ]
     );
   };
 
-  const startDate = new Date(interval.startTime);
-  const endDate = new Date(interval.endTime);
-
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.name}>{interval.name}</Text>
-        <Text style={styles.date}>{formatDate(startDate)}</Text>
+        <Text style={styles.date}>{interval.startDay.toString()}</Text>
         <View style={styles.timeContainer}>
           <Text style={styles.time}>
-            {formatTime(startDate)} - {formatTime(endDate)}
+            {interval.startTime} - {interval.endTime}
           </Text>
           <Text style={styles.duration}>
-            Длительность: {calculateDuration(interval.startTime, interval.endTime)}
+            Длительность: {calculateDuration(
+              interval.startDay, 
+              interval.startTime, 
+              interval.endDay, 
+              interval.endTime
+              )}
           </Text>
         </View>
-        {interval.description && (
-          <Text style={styles.description}>{interval.description}</Text>
+        {interval.category && (
+          <Text style={styles.description}>{interval.category}</Text>
         )}
       </View>
       
       <View style={styles.actions}>
         <TouchableOpacity
           style={[styles.button, styles.editButton]}
-          onPress={() => onEdit(interval)}
+          onPress={() => handleEditInterval()}
         >
           <Text style={styles.buttonText}>✏️</Text>
         </TouchableOpacity>

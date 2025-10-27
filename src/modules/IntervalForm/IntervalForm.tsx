@@ -9,7 +9,7 @@ import {
   Modal,
 } from 'react-native';
 
-import { validateInterval } from '../../shared/helpers/timeHelpers';
+import { validateInterval } from '../IntervalList/timeHelpers';
 import { FormIntervalType } from '../../shared/storage';
 import { useSelector } from 'react-redux';
 import { selectCurrentInterval } from './form.slice';
