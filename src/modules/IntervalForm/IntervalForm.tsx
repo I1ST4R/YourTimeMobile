@@ -23,6 +23,7 @@ import {
   updateInterval,
 } from '../IntervalList/interval.slice';
 import { getCurrentDate } from '../IntervalList/timeHelpers';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const IntervalForm = () => {
   const dispatch = useAppDispatch();
@@ -30,35 +31,45 @@ const IntervalForm = () => {
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
   const [category, setCategory] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<Date>(getCurrentDate());
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 
   const curInterval = useSelector(selectCurrentInterval);
   const isOpen = useSelector(selectIsOpen);
   const formType = useSelector(selectFormType);
 
-  // Используем useEffect для синхронизации с curInterval
   useEffect(() => {
     if (curInterval) {
       setName(curInterval.name || '');
       setStartTime(curInterval.startTime || '');
       setEndTime(curInterval.endTime || '');
       setCategory(curInterval.category || '');
+      setSelectedDate(curInterval.date);
     } else {
       resetForm();
     }
-  }, [curInterval]); // Зависимость только от curInterval
+  }, [curInterval]);
 
   const resetForm = (): void => {
     setName('');
     setStartTime('');
     setEndTime('');
     setCategory('');
+    setSelectedDate(new Date());
+  };
+
+  const handleDateChange = (event: any, date?: Date): void => {
+    setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+    }
   };
 
   const handleSave = (): void => {
     const intervalData: FormIntervalType = {
       name: name.trim(),
       startTime,
-      date: getCurrentDate(),
+      date: selectedDate, // Используем выбранную дату
       endTime,
       category,
     };
@@ -85,6 +96,10 @@ const IntervalForm = () => {
     dispatch(closeForm());
   };
 
+  const showDatepicker = (): void => {
+    setShowDatePicker(true);
+  };
+
   return (
     <Modal
       visible={isOpen}
@@ -102,15 +117,31 @@ const IntervalForm = () => {
 
           <TextInput
             style={styles.input}
-            placeholder="Название интервала "
+            placeholder="Название"
             placeholderTextColor="#666"
             value={name}
             onChangeText={setName}
           />
 
+          {/* Поле выбора даты */}
+          <TouchableOpacity style={styles.dateButton} onPress={showDatepicker}>
+            <Text style={styles.dateButtonText}>
+              Дата: {selectedDate.toLocaleDateString('ru-RU')}
+            </Text>
+          </TouchableOpacity>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+            />
+          )}
+
           <TextInput
             style={styles.input}
-            placeholder="Время начала "
+            placeholder="Начало"
             placeholderTextColor="#666"
             value={startTime}
             onChangeText={setStartTime}
@@ -118,7 +149,7 @@ const IntervalForm = () => {
 
           <TextInput
             style={styles.input}
-            placeholder="Время окончания"
+            placeholder="Конец"
             placeholderTextColor="#666"
             value={endTime}
             onChangeText={setEndTime}
@@ -181,6 +212,18 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
     fontSize: 16,
+  },
+  dateButton: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+    backgroundColor: '#f9f9f9',
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: '#333',
   },
   textArea: {
     height: 80,

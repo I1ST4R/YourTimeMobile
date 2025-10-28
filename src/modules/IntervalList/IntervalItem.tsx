@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
 import { useAppDispatch } from '../../app/store';
 import { deleteInterval } from './interval.slice';
@@ -13,12 +7,12 @@ import { changeCurrentInterval, openForm } from '../IntervalForm/form.slice';
 import { StoreIntervalType } from '../../shared/storage';
 import { calculateDuration } from './timeHelpers';
 
-const IntervalItem = ({ interval } : {interval: StoreIntervalType}) => {
-  const dispatch = useAppDispatch()
+const IntervalItem = ({ interval }: { interval: StoreIntervalType }) => {
+  const dispatch = useAppDispatch();
 
   const handleEditInterval = () => {
     dispatch(changeCurrentInterval(interval));
-    dispatch(openForm())
+    dispatch(openForm());
   };
 
   const handleDelete = () => {
@@ -27,39 +21,43 @@ const IntervalItem = ({ interval } : {interval: StoreIntervalType}) => {
       'Вы уверены, что хотите удалить этот интервал?',
       [
         { text: 'Отмена', style: 'cancel' },
-        { 
-          text: 'Удалить', 
+        {
+          text: 'Удалить',
           style: 'destructive',
-          onPress: () => dispatch(deleteInterval(interval.id))
+          onPress: () => dispatch(deleteInterval(interval.id)),
         },
-      ]
+      ],
     );
   };
 
-  const [duration, isDifDays] = calculateDuration(interval.startTime, interval.endTime)
+  const [duration, isDifDays] = calculateDuration(
+    interval.startTime,
+    interval.endTime,
+  );
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.name}>{interval.name}</Text>
-        <Text style={styles.date}>дата</Text>
+        <Text style={styles.date}>{interval.date.toString()}</Text>
         <View style={styles.timeContainer}>
-          <Text style={styles.time}>
-            {interval.startTime} - {interval.endTime}
-          </Text>
-          <Text style={styles.duration}>
-            Длительность: {duration}
-          </Text>
-          {
-            isDifDays ? <Text style={styles.duration}> переход через день</Text>
-            : <></>
-          }
+          <View style={styles.timeRow}>
+            <Text style={styles.time}>
+              {interval.startTime} - {interval.endTime}
+            </Text>
+            {isDifDays && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>+1д</Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.duration}>Длительность: {duration}</Text>
         </View>
         {interval.category && (
           <Text style={styles.description}>{interval.category}</Text>
         )}
       </View>
-      
+
       <View style={styles.actions}>
         <TouchableOpacity
           style={[styles.button, styles.editButton]}
@@ -67,7 +65,7 @@ const IntervalItem = ({ interval } : {interval: StoreIntervalType}) => {
         >
           <Text style={styles.buttonText}>✏️</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.button, styles.deleteButton]}
           onPress={handleDelete}
@@ -80,6 +78,22 @@ const IntervalItem = ({ interval } : {interval: StoreIntervalType}) => {
 };
 
 const styles = StyleSheet.create({
+  timeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  badge: {
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
   container: {
     flexDirection: 'row',
     backgroundColor: 'white',
