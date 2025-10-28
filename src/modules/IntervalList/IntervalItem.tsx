@@ -36,6 +36,8 @@ const IntervalItem = ({ interval } : {interval: StoreIntervalType}) => {
     );
   };
 
+  const [duration, isDifDays] = calculateDuration(interval.startTime, interval.endTime)
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -46,13 +48,12 @@ const IntervalItem = ({ interval } : {interval: StoreIntervalType}) => {
             {interval.startTime} - {interval.endTime}
           </Text>
           <Text style={styles.duration}>
-            Длительность: {calculateDuration(
-              interval.startDay, 
-              interval.startTime, 
-              interval.endDay, 
-              interval.endTime
-              )}
+            Длительность: {duration}
           </Text>
+          {
+            isDifDays ? <Text style={styles.duration}> переход через день</Text>
+            : <></>
+          }
         </View>
         {interval.category && (
           <Text style={styles.description}>{interval.category}</Text>

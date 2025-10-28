@@ -9,25 +9,9 @@ const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$
 const baseIntervalSchema = z.object({
   name: z.string().max(100, "Название слишком длинное"),
   startTime: timeSchema,
-  startDay: z.date(),
+  date: z.date(),
   endTime: timeSchema,
-  endDay: z.date(),
   category: z.string().max(30, "Описание слишком длинное"),
-});
-
-// Схема с валидацией для формы
-export const formIntervalSchema = baseIntervalSchema.refine((data) => {
-  const startDateTime = new Date(data.startDay);
-  const [startHours, startMinutes, startSeconds] = data.startTime.split(':').map(Number);
-  startDateTime.setHours(startHours, startMinutes, startSeconds, 0);
-  
-  const endDateTime = new Date(data.endDay);
-  const [endHours, endMinutes, endSeconds] = data.endTime.split(':').map(Number);
-  endDateTime.setHours(endHours, endMinutes, endSeconds, 0);
-  
-  return endDateTime > startDateTime;
-}, {
-  message: "Конечная дата/время должна быть после начальной",
 });
 
 
@@ -35,7 +19,7 @@ export const storeIntervalSchema = baseIntervalSchema.extend({
   id: z.string(),
 });
 
-export type FormIntervalType = z.infer<typeof formIntervalSchema>;
+export type FormIntervalType = z.infer<typeof baseIntervalSchema>;
 export type StoreIntervalType = z.infer<typeof storeIntervalSchema>;
 
 

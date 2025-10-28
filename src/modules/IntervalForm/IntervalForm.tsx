@@ -10,20 +10,30 @@ import {
 
 import { FormIntervalType } from '../../shared/storage';
 import { useSelector } from 'react-redux';
-import { closeForm, selectCurrentInterval, selectFormType, selectIsOpen } from './form.slice';
+import {
+  closeForm,
+  selectCurrentInterval,
+  selectFormType,
+  selectIsOpen,
+} from './form.slice';
 import { useAppDispatch } from '../../app/store';
-import { addInterval, deleteInterval, updateInterval } from '../IntervalList/interval.slice';
+import {
+  addInterval,
+  deleteInterval,
+  updateInterval,
+} from '../IntervalList/interval.slice';
+import { getCurrentDate } from '../IntervalList/timeHelpers';
 
 const IntervalForm = () => {
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
   const [name, setName] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
   const [category, setCategory] = useState<string>('');
-  
+
   const curInterval = useSelector(selectCurrentInterval);
-  const isOpen = useSelector(selectIsOpen)
-  const formType = useSelector(selectFormType)
+  const isOpen = useSelector(selectIsOpen);
+  const formType = useSelector(selectFormType);
 
   // Используем useEffect для синхронизации с curInterval
   useEffect(() => {
@@ -48,25 +58,26 @@ const IntervalForm = () => {
     const intervalData: FormIntervalType = {
       name: name.trim(),
       startTime,
-      startDay: new Date(),
+      date: getCurrentDate(),
       endTime,
-      endDay: new Date(),
       category,
     };
 
     switch (formType) {
-      case "delete":
-        dispatch(deleteInterval(curInterval?.id ?? ""))
+      case 'delete':
+        dispatch(deleteInterval(curInterval?.id ?? ''));
         break;
-      case "create": 
-        dispatch(addInterval(intervalData))
+      case 'create':
+        dispatch(addInterval(intervalData));
         break;
-      case "update":
-        dispatch(updateInterval({id: curInterval?.id ?? "", interval: intervalData}))
+      case 'update':
+        dispatch(
+          updateInterval({ id: curInterval?.id ?? '', interval: intervalData }),
+        );
         break;
     }
     resetForm();
-    dispatch(closeForm())
+    dispatch(closeForm());
   };
 
   const handleCancel = (): void => {
@@ -84,7 +95,9 @@ const IntervalForm = () => {
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.title}>
-            {formType === "update" ? 'Редактировать интервал' : 'Добавить интервал'}
+            {formType === 'update'
+              ? 'Редактировать интервал'
+              : 'Добавить интервал'}
           </Text>
 
           <TextInput
@@ -112,13 +125,11 @@ const IntervalForm = () => {
           />
 
           <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Описание"
+            style={styles.input}
+            placeholder="Категория"
             placeholderTextColor="#666"
             value={category}
             onChangeText={setCategory}
-            multiline
-            numberOfLines={3}
           />
 
           <View style={styles.buttonContainer}>
