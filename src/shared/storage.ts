@@ -8,9 +8,11 @@ const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$
 // Базовая схема без refine
 const baseIntervalSchema = z.object({
   name: z.string().max(100, "Название слишком длинное"),
-  startTime: timeSchema,
   date: z.date(),
+  startTime: timeSchema,
   endTime: timeSchema,
+  duration: timeSchema,
+  isDifDays: z.boolean(),
   category: z.string().max(30, "Описание слишком длинное"),
 });
 

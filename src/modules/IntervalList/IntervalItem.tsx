@@ -6,7 +6,6 @@ import { useAppDispatch } from '../../app/store';
 import { deleteInterval } from './interval.slice';
 import { changeCurrentInterval, openForm } from '../IntervalForm/form.slice';
 import { StoreIntervalType } from '../../shared/storage';
-import { calculateDuration } from './timeHelpers';
 
 const IntervalItem = ({ interval }: { interval: StoreIntervalType }) => {
   const dispatch = useAppDispatch();
@@ -31,10 +30,10 @@ const IntervalItem = ({ interval }: { interval: StoreIntervalType }) => {
     );
   };
 
-  const [duration, isDifDays] = calculateDuration(
-    interval.startTime,
-    interval.endTime,
-  );
+  // const [duration, isDifDays] = calculateDuration(
+  //   interval.startTime,
+  //   interval.endTime,
+  // );
 
   return (
     <View style={tw`flex-row bg-white p-4 my-1 mx-2 rounded-lg shadow-md shadow-black/10 elevation-2`}>
@@ -48,14 +47,14 @@ const IntervalItem = ({ interval }: { interval: StoreIntervalType }) => {
             <Text style={tw`text-sm text-gray-800`}>
               {interval.startTime} - {interval.endTime}
             </Text>
-            {isDifDays && (
+            {interval.isDifDays && (
               <View style={tw`bg-red-400 px-1.5 py-0.5 rounded-lg`}>
                 <Text style={tw`text-white text-xs font-bold`}>+1д</Text>
               </View>
             )}
           </View>
           <Text style={tw`text-blue-500 text-xs mt-0.5`}>
-            Длительность: {duration}
+            Длительность: {interval.duration}
           </Text>
         </View>
         

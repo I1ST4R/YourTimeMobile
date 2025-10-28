@@ -22,7 +22,7 @@ import {
   deleteInterval,
   updateInterval,
 } from '../IntervalList/interval.slice';
-import { getCurrentDate } from '../IntervalList/timeHelpers';
+import { calculateDuration, getCurrentDate } from '../IntervalList/timeHelpers';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const IntervalForm = () => {
@@ -66,10 +66,17 @@ const IntervalForm = () => {
   };
 
   const handleSave = (): void => {
+    const [duration, isDifDays] = calculateDuration(
+      startTime,
+      endTime,
+    );
+
     const intervalData: FormIntervalType = {
       name: name.trim(),
       startTime,
-      date: selectedDate, // Используем выбранную дату
+      date: selectedDate,
+      duration,
+      isDifDays,
       endTime,
       category,
     };
