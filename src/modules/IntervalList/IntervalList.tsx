@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,9 @@ import IntervalItem from './IntervalItem';
 
 const IntervalList = () => {
   const dispatch = useAppDispatch()
-  dispatch(loadIntervals())
+  useEffect(() => {
+    dispatch(loadIntervals())
+  },[dispatch])
   const intervals = useSelector(selectIntervals)
 
   if (intervals.length === 0) {

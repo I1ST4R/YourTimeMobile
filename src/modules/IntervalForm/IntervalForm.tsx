@@ -5,65 +5,78 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Modal,
 } from 'react-native';
 
-import { validateInterval } from '../IntervalList/timeHelpers';
 import { FormIntervalType } from '../../shared/storage';
 import { useSelector } from 'react-redux';
-import { selectCurrentInterval } from './form.slice';
+import { closeForm, selectCurrentInterval, selectFormType, selectIsOpen } from './form.slice';
+import { useAppDispatch } from '../../app/store';
+import { addInterval, deleteInterval, updateInterval } from '../IntervalList/interval.slice';
 
 const IntervalForm = () => {
+  const dispatch = useAppDispatch()
   const [name, setName] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
+  
   const curInterval = useSelector(selectCurrentInterval);
+  const isOpen = useSelector(selectIsOpen)
+  const formType = useSelector(selectFormType)
+
+  // Используем useEffect для синхронизации с curInterval
+  useEffect(() => {
+    if (curInterval) {
+      setName(curInterval.name || '');
+      setStartTime(curInterval.startTime || '');
+      setEndTime(curInterval.endTime || '');
+      setCategory(curInterval.category || '');
+    } else {
+      resetForm();
+    }
+  }, [curInterval]); // Зависимость только от curInterval
 
   const resetForm = (): void => {
     setName('');
     setStartTime('');
     setEndTime('');
-    setDescription('');
+    setCategory('');
   };
 
-  if (curInterval) {
-    setName(curInterval.name || '');
-    setStartTime(curInterval.startTime || '');
-    setEndTime(curInterval.endTime || '');
-    setDescription(curInterval.description || '');
-  } else {
-    resetForm();
-  }
-
   const handleSave = (): void => {
-    const validation = validateInterval(startTime, endTime);
-    if (!validation.isValid) {
-      Alert.alert('Ошибка', validation.error || 'Неизвестная ошибка');
-      return;
-    }
-
     const intervalData: FormIntervalType = {
-      name: name.trim() || `Интервал ${formatTime(new Date())}`,
+      name: name.trim(),
       startTime,
+      startDay: new Date(),
       endTime,
-      description: description.trim(),
+      endDay: new Date(),
+      category,
     };
 
-    onSave(intervalData);
+    switch (formType) {
+      case "delete":
+        dispatch(deleteInterval(curInterval?.id ?? ""))
+        break;
+      case "create": 
+        dispatch(addInterval(intervalData))
+        break;
+      case "update":
+        dispatch(updateInterval({id: curInterval?.id ?? "", interval: intervalData}))
+        break;
+    }
     resetForm();
-    onClose();
+    dispatch(closeForm())
   };
 
   const handleCancel = (): void => {
     resetForm();
-    onClose();
+    dispatch(closeForm());
   };
 
   return (
     <Modal
-      visible={visible}
+      visible={isOpen}
       animationType="slide"
       transparent={true}
       onRequestClose={handleCancel}
@@ -71,7 +84,7 @@ const IntervalForm = () => {
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.title}>
-            {editingInterval ? 'Редактировать интервал' : 'Добавить интервал'}
+            {formType === "update" ? 'Редактировать интервал' : 'Добавить интервал'}
           </Text>
 
           <TextInput
@@ -102,8 +115,8 @@ const IntervalForm = () => {
             style={[styles.input, styles.textArea]}
             placeholder="Описание"
             placeholderTextColor="#666"
-            value={description}
-            onChangeText={setDescription}
+            value={category}
+            onChangeText={setCategory}
             multiline
             numberOfLines={3}
           />
@@ -129,6 +142,7 @@ const IntervalForm = () => {
   );
 };
 
+// Стили остаются теми же...
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,

@@ -40,7 +40,7 @@ const IntervalItem = ({ interval } : {interval: StoreIntervalType}) => {
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.name}>{interval.name}</Text>
-        <Text style={styles.date}>{interval.startDay.toString()}</Text>
+        <Text style={styles.date}>дата</Text>
         <View style={styles.timeContainer}>
           <Text style={styles.time}>
             {interval.startTime} - {interval.endTime}

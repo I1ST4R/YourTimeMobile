@@ -23,7 +23,7 @@ export const loadIntervals = createAsyncThunk(
 
 export const addInterval = createAsyncThunk(
   'intervals/addInterval',
-  async (intervalData: Omit<StoreIntervalType, 'id'>, { dispatch }) => {
+  async (intervalData: FormIntervalType, { dispatch }) => {
     const success = await TimeIntervalStorage.addInterval(intervalData);
     if (success) {
       await dispatch(loadIntervals());
