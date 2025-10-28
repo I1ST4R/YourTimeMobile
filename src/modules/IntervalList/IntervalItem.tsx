@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import tw from 'twrnc';
 
 import { useAppDispatch } from '../../app/store';
 import { deleteInterval } from './interval.slice';
@@ -36,132 +37,53 @@ const IntervalItem = ({ interval }: { interval: StoreIntervalType }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.name}>{interval.name}</Text>
-        <Text style={styles.date}>{interval.date.toString()}</Text>
-        <View style={styles.timeContainer}>
-          <View style={styles.timeRow}>
-            <Text style={styles.time}>
+    <View style={tw`flex-row bg-white p-4 my-1 mx-2 rounded-lg shadow-md shadow-black/10 elevation-2`}>
+      {/* Content */}
+      <View style={tw`flex-1`}>
+        <Text style={tw`text-base font-bold mb-1`}>{interval.name}</Text>
+        <Text style={tw`text-sm text-gray-600 mb-1`}>{interval.date.toString()}</Text>
+        
+        <View style={tw`mb-1`}>
+          <View style={tw`flex-row items-center gap-1.5`}>
+            <Text style={tw`text-sm text-gray-800`}>
               {interval.startTime} - {interval.endTime}
             </Text>
             {isDifDays && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>+1д</Text>
+              <View style={tw`bg-red-400 px-1.5 py-0.5 rounded-lg`}>
+                <Text style={tw`text-white text-xs font-bold`}>+1д</Text>
               </View>
             )}
           </View>
-          <Text style={styles.duration}>Длительность: {duration}</Text>
+          <Text style={tw`text-blue-500 text-xs mt-0.5`}>
+            Длительность: {duration}
+          </Text>
         </View>
+        
         {interval.category && (
-          <Text style={styles.description}>{interval.category}</Text>
+          <Text style={tw`text-gray-600 text-xs italic mt-1`}>
+            {interval.category}
+          </Text>
         )}
       </View>
 
-      <View style={styles.actions}>
+      {/* Actions */}
+      <View style={tw`flex-row items-center gap-2`}>
         <TouchableOpacity
-          style={[styles.button, styles.editButton]}
-          onPress={() => handleEditInterval()}
+          style={tw`bg-orange-500 p-2 rounded min-w-9 items-center`}
+          onPress={handleEditInterval}
         >
-          <Text style={styles.buttonText}>✏️</Text>
+          <Text style={tw`text-white text-xs`}>✏️</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.deleteButton]}
+          style={tw`bg-red-500 p-2 rounded min-w-9 items-center`}
           onPress={handleDelete}
         >
-          <Text style={styles.buttonText}>🗑️</Text>
+          <Text style={tw`text-white text-xs`}>🗑️</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  badge: {
-    backgroundColor: '#FF6B6B',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  badgeText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  container: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    padding: 15,
-    marginVertical: 4,
-    marginHorizontal: 8,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  content: {
-    flex: 1,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  date: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  timeContainer: {
-    marginBottom: 4,
-  },
-  time: {
-    fontSize: 14,
-    color: '#333',
-  },
-  duration: {
-    fontSize: 12,
-    color: '#007AFF',
-    marginTop: 2,
-  },
-  description: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  button: {
-    padding: 8,
-    borderRadius: 4,
-    minWidth: 36,
-    alignItems: 'center',
-  },
-  editButton: {
-    backgroundColor: '#FFA500',
-  },
-  deleteButton: {
-    backgroundColor: '#FF3B30',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 12,
-  },
-});
 
 export default IntervalItem;

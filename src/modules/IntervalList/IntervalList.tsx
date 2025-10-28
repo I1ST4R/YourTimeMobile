@@ -3,12 +3,12 @@ import {
   View,
   Text,
   FlatList,
-  StyleSheet,
 } from 'react-native';
 import { useAppDispatch } from '../../app/store';
 import { loadIntervals, selectIntervals } from './interval.slice';
 import { useSelector } from 'react-redux';
 import IntervalItem from './IntervalItem';
+import tw from 'twrnc';
 
 const IntervalList = () => {
   const dispatch = useAppDispatch()
@@ -19,9 +19,9 @@ const IntervalList = () => {
 
   if (intervals.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Нет добавленных интервалов</Text>
-        <Text style={styles.emptySubtext}>Нажмите "+" чтобы добавить первый интервал</Text>
+      <View style={tw`flex-1 justify-center items-center p-5`}>
+        <Text style={tw`text-lg text-gray-600 mb-2`}>Нет добавленных интервалов</Text>
+        <Text style={tw`text-sm text-gray-500 text-center`}>Нажмите "+" чтобы добавить первый интервал</Text>
       </View>
     );
   }
@@ -33,35 +33,10 @@ const IntervalList = () => {
       renderItem={({ item }) => (
         <IntervalItem interval={item}/>
       )}
-      style={styles.list}
-      contentContainerStyle={styles.listContent}
+      style={tw`flex-1`}
+      contentContainerStyle={tw`py-2`}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingVertical: 8,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#999',
-    textAlign: 'center',
-  },
-});
 
 export default IntervalList;

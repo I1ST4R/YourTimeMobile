@@ -4,9 +4,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   Modal,
 } from 'react-native';
+import tw from 'twrnc';
 
 import { FormIntervalType } from '../../shared/storage';
 import { useSelector } from 'react-redux';
@@ -107,16 +107,16 @@ const IntervalForm = () => {
       transparent={true}
       onRequestClose={handleCancel}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.title}>
+      <View style={tw`flex-1 justify-center items-center bg-black/50`}>
+        <View style={tw`bg-white p-5 rounded-xl w-11/12 max-w-100`}>
+          <Text style={tw`text-lg font-bold mb-5 text-center`}>
             {formType === 'update'
               ? 'Редактировать интервал'
               : 'Добавить интервал'}
           </Text>
 
           <TextInput
-            style={styles.input}
+            style={tw`border border-gray-300 rounded p-2.5 mb-3.5 text-base`}
             placeholder="Название"
             placeholderTextColor="#666"
             value={name}
@@ -124,8 +124,11 @@ const IntervalForm = () => {
           />
 
           {/* Поле выбора даты */}
-          <TouchableOpacity style={styles.dateButton} onPress={showDatepicker}>
-            <Text style={styles.dateButtonText}>
+          <TouchableOpacity 
+            style={tw`border border-gray-300 rounded p-2.5 mb-3.5 bg-gray-50`}
+            onPress={showDatepicker}
+          >
+            <Text style={tw`text-base text-gray-800`}>
               Дата: {selectedDate.toLocaleDateString('ru-RU')}
             </Text>
           </TouchableOpacity>
@@ -140,7 +143,7 @@ const IntervalForm = () => {
           )}
 
           <TextInput
-            style={styles.input}
+            style={tw`border border-gray-300 rounded p-2.5 mb-3.5 text-base`}
             placeholder="Начало"
             placeholderTextColor="#666"
             value={startTime}
@@ -148,7 +151,7 @@ const IntervalForm = () => {
           />
 
           <TextInput
-            style={styles.input}
+            style={tw`border border-gray-300 rounded p-2.5 mb-3.5 text-base`}
             placeholder="Конец"
             placeholderTextColor="#666"
             value={endTime}
@@ -156,26 +159,26 @@ const IntervalForm = () => {
           />
 
           <TextInput
-            style={styles.input}
+            style={tw`border border-gray-300 rounded p-2.5 mb-3.5 text-base`}
             placeholder="Категория"
             placeholderTextColor="#666"
             value={category}
             onChangeText={setCategory}
           />
 
-          <View style={styles.buttonContainer}>
+          <View style={tw`flex-row justify-between mt-2.5`}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={tw`bg-gray-500 p-3 rounded min-w-25 items-center`}
               onPress={handleCancel}
             >
-              <Text style={styles.buttonText}>Отмена</Text>
+              <Text style={tw`text-white font-bold`}>Отмена</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, styles.saveButton]}
+              style={tw`bg-blue-500 p-3 rounded min-w-25 items-center`}
               onPress={handleSave}
             >
-              <Text style={styles.buttonText}>Сохранить</Text>
+              <Text style={tw`text-white font-bold`}>Сохранить</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -183,73 +186,5 @@ const IntervalForm = () => {
     </Modal>
   );
 };
-
-// Стили остаются теми же...
-const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '90%',
-    maxWidth: 400,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
-    fontSize: 16,
-  },
-  dateButton: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
-    backgroundColor: '#f9f9f9',
-  },
-  dateButtonText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  button: {
-    padding: 12,
-    borderRadius: 5,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-  },
-  cancelButton: {
-    backgroundColor: '#8E8E93',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});
 
 export default IntervalForm;

@@ -2,10 +2,10 @@ import {
   View,
   TouchableOpacity,
   Text,
-  StyleSheet,
   SafeAreaView,
   StatusBar,
 } from 'react-native';
+import tw from 'twrnc';
 
 import IntervalForm from '../modules/IntervalForm/IntervalForm';
 import { useAppDispatch } from '../app/store';
@@ -25,94 +25,32 @@ const Interval = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={tw`flex-1 bg-gray-100`}>
       <StatusBar barStyle="dark-content" />
       
-      <View style={styles.header}>
-        <Text style={styles.title}>Тайм-трекер</Text>
-        <Text style={styles.subtitle}>Управление временными интервалами</Text>
+      <View style={tw`bg-white px-5 pt-2.5 pb-5 border-b border-gray-300`}>
+        <Text style={tw`text-2xl font-bold text-gray-800`}>Тайм-трекер</Text>
+        <Text style={tw`text-sm text-gray-600 mt-1`}>Управление временными интервалами</Text>
         
-        <View style={styles.stats}>
-          <Text style={styles.statsText}>
+        <View style={tw`mt-2 pt-2 border-t border-gray-200`}>
+          <Text style={tw`text-xs text-gray-500`}>
             Всего интервалов: {intervalsLength}
           </Text>
         </View>
       </View>
 
-      <View style={styles.content}><IntervalList/></View>
+      <View style={tw`flex-1`}><IntervalList/></View>
 
       <TouchableOpacity
-        style={styles.fab}
+        style={tw`absolute right-5 bottom-5 w-14 h-14 rounded-full bg-blue-500 justify-center items-center shadow-lg shadow-black/25 elevation-4`}
         onPress={handleAddInterval}
       >
-        <Text style={styles.fabText}>+</Text>
+        <Text style={tw`text-2xl text-white font-bold`}>+</Text>
       </TouchableOpacity>
 
       <IntervalForm/>
     </SafeAreaView>
   );
 };
-
-// Стили остаются без изменений
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    backgroundColor: 'white',
-    padding: 20,
-    paddingTop: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  stats: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  statsText: {
-    fontSize: 12,
-    color: '#888',
-  },
-  content: {
-    flex: 1,
-  },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  fabText: {
-    fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});
 
 export default Interval;

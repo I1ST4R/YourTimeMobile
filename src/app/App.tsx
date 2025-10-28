@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider } from 'react-redux';
-import { store } from './store'; // или путь к твоему store файлу
+import { store } from './store'; 
 import tw from 'twrnc';
 
 import Interval from '../screens/Interval';
