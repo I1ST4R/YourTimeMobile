@@ -1,19 +1,31 @@
-import { FieldErrors, UseFormWatch } from "react-hook-form";
-import { Text, TouchableOpacity, View } from "react-native";
+import { FieldErrors, UseFormSetValue, UseFormTrigger, UseFormWatch } from 'react-hook-form';
+import { Text, TouchableOpacity, View } from 'react-native';
 import tw from 'twrnc';
-import { FormIntervalType } from "../interval/intervalStorage";
+import { FormIntervalType } from '../interval/intervalStorage';
+import { CategorySelector } from '../../CategorySelector/CategorySelector';
+import { useState } from 'react';
 
 type CategoryFieldProps = {
   watch: UseFormWatch<FormIntervalType>
-  errors: FieldErrors<FormIntervalType> 
-  setIsSelectOpen: React.Dispatch<React.SetStateAction<boolean>>
+  errors: FieldErrors<FormIntervalType>
+  setValue: UseFormSetValue<FormIntervalType>
+  trigger: UseFormTrigger<FormIntervalType>
 }
 
 export const CategoryField = ({
-  watch, 
+  watch,
   errors,
-  setIsSelectOpen
+  setValue,
+  trigger,
 }: CategoryFieldProps) => {
+
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+
+  const handleChangeCategory = (value: string) => {
+    setValue('category', value, { shouldValidate: true });
+    trigger('category');
+  };
+
   return (
     <View style={tw`mb-2`}>
       <TouchableOpacity
@@ -32,6 +44,12 @@ export const CategoryField = ({
           {errors.category.message}
         </Text>
       )}
+
+      <CategorySelector
+        onCategoryChange={handleChangeCategory}
+        setIsOpen={setIsSelectOpen}
+        isOpen={isSelectOpen}
+      />
     </View>
   );
 };

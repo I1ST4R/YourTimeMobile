@@ -1,21 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import tw from 'twrnc';
-
 import { useAppDispatch } from '../../app/store';
-import {
-  deleteInterval,
-  updateInterval,
-} from './interval/interval.slice';
+import { deleteInterval, updateInterval } from './interval/interval.slice';
 import { baseIntervalSchema, FormIntervalType, StoreIntervalType } from './interval/intervalStorage';
-import { calculateDuration, dateToString, stringToDate } from './timeHelpers';
-import { CategorySelector } from '../CategorySelector/CategorySelector';
+import { calculateDuration } from './timeHelpers';
 import { NameField } from './components/NameField';
 import { CategoryField } from './components/CategoryField';
 import { TimeField } from './components/TimeField';
+import tw from 'twrnc';
+import { DateDurationField } from './components/DateDurationField';
 
 type IntervalItemProps = {
   interval: StoreIntervalType;
@@ -23,9 +18,6 @@ type IntervalItemProps = {
 
 const IntervalItem = ({ interval }: IntervalItemProps) => {
   const dispatch = useAppDispatch();
-  const [isSelectOpen, setIsSelectOpen] = useState(false);
-  
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const {
     control,
@@ -57,43 +49,6 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
     setValue('duration', duration, { shouldValidate: true });
     setValue('isDifDays', isDifDays, { shouldValidate: true });
   }, [watchStartTime, watchEndTime, setValue]);
-
-  const openDatePicker = () => {
-    setShowDatePicker(true);
-  };
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-
-    if (selectedDate) {
-      const newDateString = dateToString(selectedDate);
-      setValue('date', newDateString, { shouldValidate: true });
-      trigger('date');
-      
-      if (Platform.OS === 'android') {
-        setShowDatePicker(false);
-      }
-    }
-  };
-
-  const handleDateConfirm = () => {
-    const selectedDate = stringToDate(watch('date'));
-    const newDateString = dateToString(selectedDate);
-    setValue('date', newDateString, { shouldValidate: true });
-    trigger('date');
-    setShowDatePicker(false);
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    const date = stringToDate(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
 
   const handleSave = (data: FormIntervalType) => {
     const [duration, isDifDays] = calculateDuration(data.startTime, data.endTime);
@@ -144,47 +99,15 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
     );
   };
 
-  const handleChangeCategory = (value: string) => {
-    setValue('category', value, { shouldValidate: true });
-    trigger('category');
-  };
-
-  const selectedDate = stringToDate(watch('date'));
-
   return (
     <View
       style={tw`bg-white p-3 my-1 mx-2 rounded-lg shadow-md shadow-black/10 elevation-2`}
     >
       <NameField control={control} errors={errors}/>
-
-      <CategoryField watch={watch} errors={errors} setIsSelectOpen={setIsSelectOpen}/>
-
+      <CategoryField watch={watch} errors={errors} setValue={setValue} trigger={trigger}/>
       <TimeField errors={errors} watch={watch} setValue={setValue} trigger={trigger}/>
-
-      <View style={tw`flex-row justify-between items-center mb-2`}>
-        <View>
-          <TouchableOpacity
-            style={[
-              tw`bg-gray-100 rounded-lg px-3 py-2 min-w-20 items-center`,
-              errors.date && tw`border border-red-500`
-            ]}
-            onPress={openDatePicker}
-          >
-            <Text style={tw`text-sm text-gray-800 font-medium`}>
-              {formatDateForDisplay(watch('date'))}
-            </Text>
-          </TouchableOpacity>
-          {errors.date && (
-            <Text style={tw`text-red-500 text-xs mt-1 text-center`}>
-              {errors.date.message}
-            </Text>
-          )}
-        </View>
-
-        <Text style={tw`text-blue-500 text-base font-bold`}>
-          {watch('duration')}
-        </Text>
-      </View>
+      <DateDurationField errors={errors} watch={watch} setValue={setValue} trigger={trigger}/>
+      
 
       <View style={tw`flex-row justify-between items-center`}>
         <TouchableOpacity
@@ -212,49 +135,7 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
         )}
       </View>
 
-      <CategorySelector
-        onCategoryChange={handleChangeCategory}
-        setIsOpen={setIsSelectOpen}
-        isOpen={isSelectOpen}
-      />
-
-      {showDatePicker && (
-        Platform.OS === 'ios' ? (
-          <Modal
-            visible={showDatePicker}
-            transparent={true}
-            animationType="slide"
-          >
-            <View style={tw`flex-1 justify-end bg-black/50`}>
-              <View style={tw`bg-white rounded-t-3xl p-6`}>
-                <View style={tw`flex-row justify-between items-center mb-4`}>
-                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <Text style={tw`text-red-500 text-lg font-semibold`}>Отмена</Text>
-                  </TouchableOpacity>
-                  <Text style={tw`text-lg font-bold text-gray-800`}>Выберите дату</Text>
-                  <TouchableOpacity onPress={handleDateConfirm}>
-                    <Text style={tw`text-green-500 text-lg font-semibold`}>✓</Text>
-                  </TouchableOpacity>
-                </View>
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display="spinner"
-                  onChange={handleDateChange}
-                  locale="ru-RU"
-                />
-              </View>
-            </View>
-          </Modal>
-        ) : (
-          <DateTimePicker
-            value={selectedDate}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
-          />
-        )
-      )}
+      
     </View>
   );
 };
