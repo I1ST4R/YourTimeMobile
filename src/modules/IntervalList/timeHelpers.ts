@@ -50,8 +50,30 @@ export const calculateDuration = (
   return [duration, endTotalSeconds < startTotalSeconds];
 };
 
-export const getCurrentDate = (): Date => {
+export const getCurrentDate = (): string => {
   const date = new Date();
   date.setHours(0, 0, 0, 0); 
+  return date.toString();
+};
+
+export const stringToDate = (dateString: string): Date => {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return new Date(dateString + 'T00:00:00');
+  }
+  
+  const date = new Date(dateString);
+  
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date string:', dateString);
+    return new Date();
+  }
+  
   return date;
+};
+
+export const dateToString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`; 
 };

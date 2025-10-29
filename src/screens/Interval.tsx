@@ -11,7 +11,7 @@ import IntervalForm from '../modules/IntervalForm/IntervalForm';
 import { useAppDispatch } from '../app/store';
 import { changeTypeOnCreate, openForm } from '../modules/IntervalForm/form.slice';
 import { useSelector } from 'react-redux';
-import { selectIntervalsCount } from '../modules/IntervalList/interval.slice';
+import { selectIntervalsCount } from '../modules/IntervalList/slices/interval/interval.slice';
 import IntervalList from '../modules/IntervalList/IntervalList';
 
 const Interval = () => {

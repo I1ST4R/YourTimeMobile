@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import tw from 'twrnc';
 
-import { FormIntervalType } from '../../shared/storage';
+import { FormIntervalType } from '../IntervalList/slices/interval/intervalStorage';
 import { useSelector } from 'react-redux';
 import {
   closeForm,
@@ -21,8 +21,8 @@ import {
   addInterval,
   deleteInterval,
   updateInterval,
-} from '../IntervalList/interval.slice';
-import { calculateDuration, getCurrentDate } from '../IntervalList/timeHelpers';
+} from '../IntervalList/slices/interval/interval.slice';
+import { calculateDuration, dateToString, getCurrentDate, stringToDate } from '../IntervalList/timeHelpers';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const IntervalForm = () => {
@@ -31,7 +31,7 @@ const IntervalForm = () => {
   const [startTime, setStartTime] = useState<string>('');
   const [endTime, setEndTime] = useState<string>('');
   const [category, setCategory] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<Date>(getCurrentDate());
+  const [selectedDate, setSelectedDate] = useState<string>(getCurrentDate());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
 
   const curInterval = useSelector(selectCurrentInterval);
@@ -55,13 +55,13 @@ const IntervalForm = () => {
     setStartTime('');
     setEndTime('');
     setCategory('');
-    setSelectedDate(new Date());
+    setSelectedDate(dateToString(new Date()));
   };
 
   const handleDateChange = (event: any, date?: Date): void => {
     setShowDatePicker(false);
     if (date) {
-      setSelectedDate(date);
+      setSelectedDate(dateToString(date));
     }
   };
 
@@ -136,13 +136,13 @@ const IntervalForm = () => {
             onPress={showDatepicker}
           >
             <Text style={tw`text-base text-gray-800`}>
-              Дата: {selectedDate.toLocaleDateString('ru-RU')}
+              Дата: {selectedDate}
             </Text>
           </TouchableOpacity>
 
           {showDatePicker && (
             <DateTimePicker
-              value={selectedDate}
+              value={stringToDate(selectedDate)}
               mode="date"
               display="default"
               onChange={handleDateChange}

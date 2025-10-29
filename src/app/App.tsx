@@ -6,6 +6,7 @@ import { store } from './store';
 import tw from 'twrnc';
 
 import Interval from '../screens/Interval';
+import Category from '../screens/Category';
 
 const Tab = createBottomTabNavigator();
 
@@ -24,6 +25,11 @@ export default function App() {
             name="Interval" 
             component={Interval}
             options={{ tabBarLabel: 'Интервал' }}
+          />
+          <Tab.Screen 
+            name="Category" 
+            component={Category}
+            options={{ tabBarLabel: '=Категории' }}
           />
         </Tab.Navigator>
       </NavigationContainer>

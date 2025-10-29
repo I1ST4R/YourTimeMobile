@@ -1,21 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
+import { validateArray, validateData } from '../../../../shared/helpers/validation';
 
 const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
   message: "Время должно быть в формате ЧЧ:ММ:СС (24-часовой формат)"
 });
 
+const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
+  message: "Дата должна быть в формате ГГГГ-ММ-ДД"
+});
+
 // Базовая схема без refine
 const baseIntervalSchema = z.object({
   name: z.string().max(100, "Название слишком длинное"),
-  date: z.date(),
+  date: dateSchema,
   startTime: timeSchema,
   endTime: timeSchema,
   duration: timeSchema,
   isDifDays: z.boolean(),
   category: z.string().max(30, "Описание слишком длинное"),
 });
-
 
 export const storeIntervalSchema = baseIntervalSchema.extend({
   id: z.string(),
@@ -24,16 +28,14 @@ export const storeIntervalSchema = baseIntervalSchema.extend({
 export type FormIntervalType = z.infer<typeof baseIntervalSchema>;
 export type StoreIntervalType = z.infer<typeof storeIntervalSchema>;
 
-
-export const StorageKeys = {
-  TIME_INTERVALS: 'time_intervals',
-} as const;
+const STORAGE_INTERVALS_KEY = 'time_intervals'
 
 export const TimeIntervalStorage = {
   getAllIntervals: async (): Promise<StoreIntervalType[]> => {
     try {
-      const intervals = await AsyncStorage.getItem(StorageKeys.TIME_INTERVALS);
-      return intervals ? JSON.parse(intervals) : [];
+      const intervals = await AsyncStorage.getItem(STORAGE_INTERVALS_KEY);
+      const parsedData = intervals ? JSON.parse(intervals) : [];
+      return validateArray(parsedData, storeIntervalSchema);
     } catch (error) {
       console.error('Error getting intervals:', error);
       return [];
@@ -44,9 +46,15 @@ export const TimeIntervalStorage = {
     intervals: StoreIntervalType[],
   ): Promise<boolean> => {
     try {
+      // Валидируем данные перед сохранением
+      const validatedIntervals = validateArray(intervals, storeIntervalSchema);
+      if (validatedIntervals.length !== intervals.length) {
+        throw new Error('Some intervals failed validation');
+      }
+
       await AsyncStorage.setItem(
-        StorageKeys.TIME_INTERVALS,
-        JSON.stringify(intervals),
+        STORAGE_INTERVALS_KEY,
+        JSON.stringify(validatedIntervals),
       );
       return true;
     } catch (error) {
@@ -62,7 +70,14 @@ export const TimeIntervalStorage = {
         ...interval,
         id: Date.now().toString(),
       };
-      intervals.push(newInterval);
+      
+      // Валидируем новый интервал
+      const validatedInterval = validateData(newInterval, storeIntervalSchema);
+      if (!validatedInterval) {
+        throw new Error('Interval validation failed');
+      }
+
+      intervals.push(validatedInterval);
       return await TimeIntervalStorage.saveAllIntervals(intervals);
     } catch (error) {
       console.error('Error adding interval:', error);
@@ -78,10 +93,18 @@ export const TimeIntervalStorage = {
       const intervals = await TimeIntervalStorage.getAllIntervals();
       const index = intervals.findIndex(interval => interval.id === id);
       if (index !== -1) {
-        intervals[index] = {
+        const mergedInterval = {
           ...intervals[index],
           ...updatedInterval,
         };
+        
+        // Валидируем обновленный интервал
+        const validatedInterval = validateData(mergedInterval, storeIntervalSchema);
+        if (!validatedInterval) {
+          throw new Error('Updated interval validation failed');
+        }
+
+        intervals[index] = validatedInterval;
         return await TimeIntervalStorage.saveAllIntervals(intervals);
       }
       return false;
@@ -106,10 +129,11 @@ export const TimeIntervalStorage = {
 
   getIntervalById: async (
     id: string,
-  ): Promise<FormIntervalType | undefined> => {
+  ): Promise<StoreIntervalType | undefined> => {
     try {
       const intervals = await TimeIntervalStorage.getAllIntervals();
-      return intervals.find(interval => interval.id === id);
+      const interval = intervals.find(interval => interval.id === id);
+      return interval ? validateData(interval, storeIntervalSchema) || undefined : undefined;
     } catch (error) {
       console.error('Error getting interval by id:', error);
       return undefined;

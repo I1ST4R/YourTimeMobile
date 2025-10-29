@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { FormIntervalType, StoreIntervalType, TimeIntervalStorage } from '../../shared/storage';
+import { FormIntervalType, StoreIntervalType, TimeIntervalStorage } from './intervalStorage';
 
 interface IntervalState {
   intervals: StoreIntervalType[];

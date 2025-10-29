@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { StoreIntervalType } from '../../shared/storage';
+import { StoreIntervalType } from '../IntervalList/slices/interval/intervalStorage';
 
 export type FormType = "delete" | "create" | "update"
 

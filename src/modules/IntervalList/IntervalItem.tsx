@@ -3,9 +3,9 @@ import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import tw from 'twrnc';
 
 import { useAppDispatch } from '../../app/store';
-import { deleteInterval } from './interval.slice';
+import { deleteInterval } from './slices/interval/interval.slice';
 import { changeCurrentInterval, openForm } from '../IntervalForm/form.slice';
-import { StoreIntervalType } from '../../shared/storage';
+import { StoreIntervalType } from './slices/interval/intervalStorage';
 
 const IntervalItem = ({ interval }: { interval: StoreIntervalType }) => {
   const dispatch = useAppDispatch();

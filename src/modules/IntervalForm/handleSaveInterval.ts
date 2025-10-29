@@ -1,4 +1,4 @@
-import { FormIntervalType } from "../../shared/storage";
+import { FormIntervalType } from "../IntervalList/slices/interval/intervalStorage";
 
 export const handleSaveInterval = async (intervalData: FormIntervalType): Promise<void> => {
   try {

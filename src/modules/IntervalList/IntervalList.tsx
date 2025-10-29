@@ -5,7 +5,7 @@ import {
   FlatList,
 } from 'react-native';
 import { useAppDispatch } from '../../app/store';
-import { loadIntervals, selectIntervals } from './interval.slice';
+import { loadIntervals, selectIntervals } from './slices/interval/interval.slice';
 import { useSelector } from 'react-redux';
 import IntervalItem from './IntervalItem';
 import tw from 'twrnc';
