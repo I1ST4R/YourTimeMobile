@@ -6,8 +6,6 @@ import {
   StatusBar,
 } from 'react-native';
 import tw from 'twrnc';
-
-import IntervalForm from '../modules/IntervalForm/IntervalForm';
 import { useAppDispatch } from '../app/store';
 import { changeTypeOnCreate, openForm } from '../modules/IntervalForm/form.slice';
 import { useSelector } from 'react-redux';
@@ -19,6 +17,7 @@ const Interval = () => {
   
   const intervalsLength = useSelector(selectIntervalsCount)
 
+
   const handleAddInterval = (): void => {
     dispatch(changeTypeOnCreate())
     dispatch(openForm())
@@ -26,12 +25,12 @@ const Interval = () => {
 
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-100`}>
+      
       <StatusBar barStyle="dark-content" />
       
       <View style={tw`bg-white px-5 pt-2.5 pb-5 border-b border-gray-300`}>
         <Text style={tw`text-2xl font-bold text-gray-800`}>Тайм-трекер</Text>
         <Text style={tw`text-sm text-gray-600 mt-1`}>Управление временными интервалами</Text>
-        
         <View style={tw`mt-2 pt-2 border-t border-gray-200`}>
           <Text style={tw`text-xs text-gray-500`}>
             Всего интервалов: {intervalsLength}
@@ -47,8 +46,6 @@ const Interval = () => {
       >
         <Text style={tw`text-2xl text-white font-bold`}>+</Text>
       </TouchableOpacity>
-
-      <IntervalForm/>
     </SafeAreaView>
   );
 };

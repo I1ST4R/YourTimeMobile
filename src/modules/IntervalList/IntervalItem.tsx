@@ -6,10 +6,10 @@ import { useAppDispatch } from '../../app/store';
 import {
   deleteInterval,
   updateInterval,
-  addInterval,
 } from './slices/interval/interval.slice';
 import { StoreIntervalType } from './slices/interval/intervalStorage';
 import { calculateDuration } from './timeHelpers';
+import { CategorySelector } from '../CategorySelector/CategorySelector';
 
 type IntervalItemProps = {
   interval: StoreIntervalType;
@@ -17,15 +17,14 @@ type IntervalItemProps = {
 
 const IntervalItem = ({ interval }: IntervalItemProps) => {
   const dispatch = useAppDispatch();
-
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const [category, setCategory] = useState(interval.category);
   const [name, setName] = useState(interval.name);
-  const [startTime, setStartTime] = useState(interval?.startTime);
-  const [endTime, setEndTime] = useState(interval?.endTime);
-  const [category, setCategory] = useState(interval?.category);
-  const [date, setDate] = useState(interval?.date);
+  const [startTime, setStartTime] = useState(interval.startTime);
+  const [endTime, setEndTime] = useState(interval.endTime);
+  const [date, setDate] = useState(interval.date);
 
   const [isChanged, setIsChanged] = useState(false);
-  const [showCategorySelector, setShowCategorySelector] = useState(false);
 
   const handleChange = (field: string, value: string) => {
     switch (field) {
@@ -38,11 +37,15 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
       case 'endTime':
         setEndTime(value);
         break;
-      case 'category':
-        setCategory(value);
-        break;
     }
 
+    if (!isChanged) {
+      setIsChanged(true);
+    }
+  };
+
+  const handleChangeCategory = (value: string) => {
+    setCategory(value);
     if (!isChanged) {
       setIsChanged(true);
     }
@@ -71,11 +74,11 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
   };
 
   const handleCancel = () => {
-    setName(interval!.name);
-    setStartTime(interval!.startTime);
-    setEndTime(interval!.endTime);
-    setCategory(interval!.category || '');
-    setDate(interval!.date);
+    setName(interval.name);
+    setStartTime(interval.startTime);
+    setEndTime(interval.endTime);
+    setCategory(interval.category);
+    setDate(interval.date);
     setIsChanged(false);
   };
 
@@ -99,28 +102,30 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
       style={tw`bg-white p-3 my-1 mx-2 rounded-lg shadow-md shadow-black/10 elevation-2`}
     >
       {/* Первая строка: Название и категория */}
-      <View style={tw`flex-row justify-between items-center mb-2`}>
-        <TextInput
-          value={name}
-          onChangeText={value => handleChange('name', value)}
-          style={tw`flex-1 bg-gray-100 rounded-lg px-3 py-2 text-base font-bold mr-2`}
-          placeholder="Название"
-          placeholderTextColor="#808080"
-        />
+      <View style={tw`flex-col mb-2`}>
+        <View style={tw`flex-row justify-between items-center mb-1`}>
+          <TextInput
+            value={name}
+            onChangeText={value => handleChange('name', value)}
+            style={tw`flex-1 bg-gray-100 rounded-lg px-3 py-2 text-base font-bold mr-2`}
+            placeholder="Название"
+            placeholderTextColor="#808080"
+          />
 
-        <TextInput
-          value={category}
-          onChangeText={value => handleChange('category', value)}
-          style={tw`w-1/3 bg-gray-100 rounded-lg px-3 py-2 text-sm text-gray-600`}
-          placeholder="Категория"
-          placeholderTextColor="#808080"
-        />
+          <TouchableOpacity
+            style={tw`bg-red-500 p-2 rounded-lg min-w-10 items-center`}
+            onPress={handleDelete}
+          >
+            <Text style={tw`text-white text-sm`}>🗑️</Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          style={tw`bg-red-500 p-2 rounded-lg min-w-10 items-center`}
-          onPress={handleDelete}
-        >
-          <Text style={tw`text-white text-sm`}>🗑️</Text>
+        <TouchableOpacity onPress={() => setIsSelectOpen(true)}>
+          <Text
+            style={tw`w-full bg-gray-100 rounded-lg px-3 py-2 text-sm text-gray-600`}
+          >
+            {category}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -158,7 +163,6 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
         </View>
       </View>
 
-      {/* Кнопки сохранения/отмены (только при изменениях) */}
       {isChanged && (
         <View style={tw`flex-row justify-end gap-2 mt-2`}>
           <TouchableOpacity
@@ -174,6 +178,13 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
             <Text style={tw`text-white text-sm`}>✅</Text>
           </TouchableOpacity>
         </View>
+      )}
+
+      {isSelectOpen && (
+        <CategorySelector
+          onCategoryChange={handleChangeCategory}
+          setIsOpen={setIsSelectOpen}
+        />
       )}
     </View>
   );

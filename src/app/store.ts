@@ -8,7 +8,7 @@ export const store = configureStore({
   reducer: {
     formInterval: formIntervalReducer,
     intervals: intervalReducer,
-    categories: categoriesReducer 
+    categories: categoriesReducer
   },
 });
 
