@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import tw from 'twrnc';
 import { useSelector } from 'react-redux';
-import { selectIntervalsCount } from '../modules/IntervalList/slices/interval/interval.slice';
+import { selectIntervalsCount } from '../modules/IntervalList/interval/interval.slice';
 import IntervalList from '../modules/IntervalList/IntervalList';
 
 const Interval = () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, TextInput, Platform, Modal } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
+import { View, Text, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import tw from 'twrnc';
@@ -9,17 +9,16 @@ import { useAppDispatch } from '../../app/store';
 import {
   deleteInterval,
   updateInterval,
-} from './slices/interval/interval.slice';
-import { storeIntervalSchema, StoreIntervalType } from './slices/interval/intervalStorage';
+} from './interval/interval.slice';
+import { baseIntervalSchema, FormIntervalType, StoreIntervalType } from './interval/intervalStorage';
 import { calculateDuration, dateToString, stringToDate } from './timeHelpers';
 import { CategorySelector } from '../CategorySelector/CategorySelector';
 import TimePickerModal from '../TimePickerModal/TimePickerModal';
+import { NameField } from './components/NameField';
 
 type IntervalItemProps = {
   interval: StoreIntervalType;
 };
-
-type IntervalFormData = Omit<StoreIntervalType, 'id'>;
 
 const IntervalItem = ({ interval }: IntervalItemProps) => {
   const dispatch = useAppDispatch();
@@ -36,8 +35,8 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
     watch,
     reset,
     trigger
-  } = useForm<IntervalFormData>({
-    resolver: zodResolver(storeIntervalSchema.omit({ id: true })),
+  } = useForm<FormIntervalType>({
+    resolver: zodResolver(baseIntervalSchema),
     defaultValues: {
       name: interval.name,
       date: interval.date,
@@ -184,32 +183,7 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
     <View
       style={tw`bg-white p-3 my-1 mx-2 rounded-lg shadow-md shadow-black/10 elevation-2`}
     >
-      <View style={tw`mb-2`}>
-        <Controller
-          control={control}
-          name="name"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <>
-              <TextInput
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                style={[
-                  tw`w-full bg-gray-100 rounded-lg px-3 py-2 text-base font-bold`,
-                  errors.name && tw`border border-red-500`
-                ]}
-                placeholder="Название"
-                placeholderTextColor="#808080"
-              />
-              {errors.name && (
-                <Text style={tw`text-red-500 text-xs mt-1`}>
-                  {errors.name.message}
-                </Text>
-              )}
-            </>
-          )}
-        />
-      </View>
+      <NameField control={control} errors={errors}/>
 
       <View style={tw`mb-2`}>
         <TouchableOpacity

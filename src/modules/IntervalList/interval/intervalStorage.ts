@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
-import { validateArray, validateData } from '../../../../shared/helpers/validation';
+import { validateArray, validateData } from '../../../shared/helpers/validation';
 
 const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
   message: "Время должно быть в формате ЧЧ:ММ:СС (24-часовой формат)"
@@ -11,7 +11,7 @@ const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
 });
 
 // Базовая схема без refine
-const baseIntervalSchema = z.object({
+export const baseIntervalSchema = z.object({
   name: z.string().max(100, "Название слишком длинное"),
   date: dateSchema,
   startTime: timeSchema,
