@@ -56,6 +56,14 @@ export const getCurrentDate = (): string => {
   return date.toString();
 };
 
+export const getCurrentTime = (): string => {
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+};
+
 export const stringToDate = (dateString: string): Date => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return new Date(dateString + 'T00:00:00');

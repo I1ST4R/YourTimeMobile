@@ -1,41 +1,57 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   FlatList,
+  TouchableOpacity,
 } from 'react-native';
 import { useAppDispatch } from '../../app/store';
-import { loadIntervals, selectIntervals } from './slices/interval/interval.slice';
+import { loadIntervals, selectIntervals, addInterval } from './slices/interval/interval.slice';
 import { useSelector } from 'react-redux';
 import IntervalItem from './IntervalItem';
 import tw from 'twrnc';
+import { dateToString, getCurrentTime } from './timeHelpers';
 
 const IntervalList = () => {
   const dispatch = useAppDispatch()
+  
   useEffect(() => {
     dispatch(loadIntervals())
   },[dispatch])
+  
   const intervals = useSelector(selectIntervals)
 
-  if (intervals.length === 0) {
-    return (
-      <View style={tw`flex-1 justify-center items-center p-5`}>
-        <Text style={tw`text-lg text-gray-600 mb-2`}>Нет добавленных интервалов</Text>
-        <Text style={tw`text-sm text-gray-500 text-center`}>Нажмите "+" чтобы добавить первый интервал</Text>
-      </View>
-    );
+  const handleAddNewInterval = () => {
+    dispatch(addInterval({
+      name: '',
+      startTime: getCurrentTime(),
+      endTime: getCurrentTime(),
+      date: dateToString(new Date()),
+      category: '',
+      duration: '00:00:00',
+      isDifDays: false
+    }))
   }
 
   return (
-    <FlatList
-      data={intervals}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <IntervalItem interval={item}/>
-      )}
-      style={tw`flex-1`}
-      contentContainerStyle={tw`py-2`}
-    />
+    <View style={tw`flex-1`}>
+      {/* Кнопка добавления */}
+      <TouchableOpacity 
+        style={tw`bg-blue-500 mx-4 my-3 p-3 rounded-lg items-center`}
+        onPress={handleAddNewInterval}
+      >
+        <Text style={tw`text-white text-base font-bold`}>+ Добавить интервал</Text>
+      </TouchableOpacity>
+      <FlatList
+        data={intervals}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <IntervalItem interval={item} />
+        )}
+        style={tw`flex-1`}
+        contentContainerStyle={tw`py-2`}
+      />
+    </View>
   );
 };
 
