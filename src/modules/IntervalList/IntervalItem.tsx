@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, TextInput, Platform, Modal } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import tw from 'twrnc';
 
@@ -8,7 +10,7 @@ import {
   deleteInterval,
   updateInterval,
 } from './slices/interval/interval.slice';
-import { StoreIntervalType } from './slices/interval/intervalStorage';
+import { storeIntervalSchema, StoreIntervalType } from './slices/interval/intervalStorage';
 import { calculateDuration, dateToString, stringToDate } from './timeHelpers';
 import { CategorySelector } from '../CategorySelector/CategorySelector';
 import TimePickerModal from '../TimePickerModal/TimePickerModal';
@@ -17,126 +19,102 @@ type IntervalItemProps = {
   interval: StoreIntervalType;
 };
 
+type IntervalFormData = Omit<StoreIntervalType, 'id'>;
+
 const IntervalItem = ({ interval }: IntervalItemProps) => {
   const dispatch = useAppDispatch();
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const [category, setCategory] = useState(interval.category);
-  const [isDifDays, setIsDifDays] = useState(interval.isDifDays);
-  const [name, setName] = useState(interval.name);
-  const [startTime, setStartTime] = useState(interval.startTime);
-  const [endTime, setEndTime] = useState(interval.endTime);
-  const [date, setDate] = useState(interval.date);
-
-  const [isChanged, setIsChanged] = useState(false);
-
-  // Состояния для TimePickerModal
   const [timePickerOpen, setTimePickerOpen] = useState(false);
-  const [editingField, setEditingField] = useState<
-    'startTime' | 'endTime' | null
-  >(null);
-  const [currentTime, setCurrentTime] = useState('');
-
-  // Состояния для DatePicker
+  const [editingField, setEditingField] = useState<'startTime' | 'endTime' | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(stringToDate(date));
 
-  const handleChange = (field: string, value: string) => {
-    let newStartTime = startTime;
-    let newEndTime = endTime;
-    switch (field) {
-      case 'name':
-        setName(value);
-        break;
-      case 'startTime':
-        newStartTime = value;
-        setStartTime(value);
-        break;
-      case 'endTime':
-        newEndTime = value;
-        setEndTime(value);
-        break;
-      case 'date':
-        setDate(value);
-        break;
-    }
-    const [_, isDifDaysParam] = calculateDuration(newStartTime, newEndTime);
-    setIsDifDays(isDifDaysParam);
-    if (!isChanged) {
-      setIsChanged(true);
-    }
-  };
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isDirty },
+    setValue,
+    watch,
+    reset,
+    trigger
+  } = useForm<IntervalFormData>({
+    resolver: zodResolver(storeIntervalSchema.omit({ id: true })),
+    defaultValues: {
+      name: interval.name,
+      date: interval.date,
+      startTime: interval.startTime,
+      endTime: interval.endTime,
+      duration: interval.duration,
+      isDifDays: interval.isDifDays,
+      category: interval.category,
+    },
+    mode: 'onChange'
+  });
 
-  const handleChangeCategory = (value: string) => {
-    setCategory(value);
-    if (!isChanged) {
-      setIsChanged(true);
-    }
-  };
+  const watchStartTime = watch('startTime');
+  const watchEndTime = watch('endTime');
+  const watchIsDifDays = watch('isDifDays');
 
-  // Функция для открытия пикера времени
+  useEffect(() => {
+    const [duration, isDifDays] = calculateDuration(watchStartTime, watchEndTime);
+    setValue('duration', duration, { shouldValidate: true });
+    setValue('isDifDays', isDifDays, { shouldValidate: true });
+  }, [watchStartTime, watchEndTime, setValue]);
+
   const openTimePicker = (field: 'startTime' | 'endTime') => {
     setEditingField(field);
-    setCurrentTime(field === 'startTime' ? startTime : endTime);
     setTimePickerOpen(true);
   };
 
-  // Функция для обработки выбора времени из модалки
   const handleTimeSelect = (time: string) => {
     if (editingField) {
-      handleChange(editingField, time);
+      setValue(editingField, time, { shouldValidate: true });
+      trigger(editingField);
     }
     setTimePickerOpen(false);
     setEditingField(null);
   };
 
-  // Функция для закрытия модалки без сохранения
   const handleTimePickerClose = () => {
     setTimePickerOpen(false);
     setEditingField(null);
   };
 
-  // Функция для открытия DatePicker
   const openDatePicker = () => {
-    setSelectedDate(stringToDate(date));
     setShowDatePicker(true);
   };
 
-  // Функция для обработки выбора даты
   const handleDateChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
 
     if (selectedDate) {
-      setSelectedDate(selectedDate);
       const newDateString = dateToString(selectedDate);
-      handleChange('date', newDateString);
+      setValue('date', newDateString, { shouldValidate: true });
+      trigger('date');
       
-      // На Android закрываем сразу после выбора
       if (Platform.OS === 'android') {
         setShowDatePicker(false);
       }
     }
   };
 
-  // Функция для подтверждения выбора даты на iOS
   const handleDateConfirm = () => {
+    const selectedDate = stringToDate(watch('date'));
     const newDateString = dateToString(selectedDate);
-    handleChange('date', newDateString);
+    setValue('date', newDateString, { shouldValidate: true });
+    trigger('date');
     setShowDatePicker(false);
   };
 
-  // Функция для форматирования времени для отображения в кнопке
   const formatTimeForDisplay = (time: string) => {
     const [hours, minutes, seconds] = time.split(':');
-    // Если секунды равны 00, не показываем их
     if (seconds === '00') {
       return `${hours}:${minutes}`;
     }
     return `${hours}:${minutes}:${seconds}`;
   };
 
-  // Функция для форматирования даты для отображения
   const formatDateForDisplay = (dateString: string) => {
     const date = stringToDate(dateString);
     return date.toLocaleDateString('ru-RU', {
@@ -146,36 +124,38 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
     });
   };
 
-  const handleSave = () => {
-    const [duration, isDifDays] = calculateDuration(startTime, endTime);
+  const handleSave = (data: IntervalFormData) => {
+    const [duration, isDifDays] = calculateDuration(data.startTime, data.endTime);
 
     const intervalData = {
-      name: name.trim(),
-      startTime,
-      endTime,
-      date,
+      name: data.name.trim(),
+      startTime: data.startTime,
+      endTime: data.endTime,
+      date: data.date,
       duration,
       isDifDays,
-      category,
+      category: data.category,
     };
 
     dispatch(
       updateInterval({
-        id: interval!.id,
+        id: interval.id,
         interval: intervalData,
       }),
     );
-    setIsChanged(false);
+    reset(data);
   };
 
   const handleCancel = () => {
-    setName(interval.name);
-    setStartTime(interval.startTime);
-    setEndTime(interval.endTime);
-    setCategory(interval.category);
-    setDate(interval.date);
-    setIsDifDays(interval.isDifDays);
-    setIsChanged(false);
+    reset({
+      name: interval.name,
+      date: interval.date,
+      startTime: interval.startTime,
+      endTime: interval.endTime,
+      duration: interval.duration,
+      isDifDays: interval.isDifDays,
+      category: interval.category,
+    });
   };
 
   const handleDelete = () => {
@@ -187,91 +167,143 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
         {
           text: 'Удалить',
           style: 'destructive',
-          onPress: () => dispatch(deleteInterval(interval!.id)),
+          onPress: () => dispatch(deleteInterval(interval.id)),
         },
       ],
     );
   };
 
+  const handleChangeCategory = (value: string) => {
+    setValue('category', value, { shouldValidate: true });
+    trigger('category');
+  };
+
+  const selectedDate = stringToDate(watch('date'));
+
   return (
     <View
       style={tw`bg-white p-3 my-1 mx-2 rounded-lg shadow-md shadow-black/10 elevation-2`}
     >
-      {/* Первая строка: Название */}
       <View style={tw`mb-2`}>
-        <TextInput
-          value={name}
-          onChangeText={value => handleChange('name', value)}
-          style={tw`w-full bg-gray-100 rounded-lg px-3 py-2 text-base font-bold`}
-          placeholder="Название"
-          placeholderTextColor="#808080"
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <>
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                style={[
+                  tw`w-full bg-gray-100 rounded-lg px-3 py-2 text-base font-bold`,
+                  errors.name && tw`border border-red-500`
+                ]}
+                placeholder="Название"
+                placeholderTextColor="#808080"
+              />
+              {errors.name && (
+                <Text style={tw`text-red-500 text-xs mt-1`}>
+                  {errors.name.message}
+                </Text>
+              )}
+            </>
+          )}
         />
       </View>
 
-      {/* Вторая строка: Категория */}
       <View style={tw`mb-2`}>
         <TouchableOpacity
           onPress={() => setIsSelectOpen(true)}
-          style={tw`w-full bg-gray-100 rounded-lg px-3 py-2`}
+          style={[
+            tw`w-full bg-gray-100 rounded-lg px-3 py-2`,
+            errors.category && tw`border border-red-500`
+          ]}
         >
           <Text style={tw`text-sm text-gray-600 text-left`}>
-            {category || 'Категория'}
+            {watch('category') || 'Категория'}
           </Text>
         </TouchableOpacity>
+        {errors.category && (
+          <Text style={tw`text-red-500 text-xs mt-1`}>
+            {errors.category.message}
+          </Text>
+        )}
       </View>
 
-      {/* Третья строка: Время */}
       <View style={tw`flex-row items-center gap-2 mb-1`}>
-        {/* Кнопка для выбора времени начала */}
-        <TouchableOpacity
-          onPress={() => openTimePicker('startTime')}
-          style={tw`flex-1 bg-gray-100 rounded-lg px-3 py-2 items-center`}
-        >
-          <Text style={tw`text-sm text-gray-800 font-medium`}>
-            {formatTimeForDisplay(startTime)}
-          </Text>
-        </TouchableOpacity>
+        <View style={tw`flex-1`}>
+          <TouchableOpacity
+            onPress={() => openTimePicker('startTime')}
+            style={[
+              tw`bg-gray-100 rounded-lg px-3 py-2 items-center`,
+              errors.startTime && tw`border border-red-500`
+            ]}
+          >
+            <Text style={tw`text-sm text-gray-800 font-medium`}>
+              {formatTimeForDisplay(watchStartTime)}
+            </Text>
+          </TouchableOpacity>
+          {errors.startTime && (
+            <Text style={tw`text-red-500 text-xs mt-1 text-center`}>
+              {errors.startTime.message}
+            </Text>
+          )}
+        </View>
 
         <Text style={tw`text-gray-600 text-sm`}>-</Text>
 
-        {/* Кнопка для выбора времени окончания */}
-        <TouchableOpacity
-          onPress={() => openTimePicker('endTime')}
-          style={tw`flex-1 bg-gray-100 rounded-lg px-3 py-2 items-center`}
-        >
-          <Text style={tw`text-sm text-gray-800 font-medium`}>
-            {formatTimeForDisplay(endTime)}
-          </Text>
-        </TouchableOpacity>
+        <View style={tw`flex-1`}>
+          <TouchableOpacity
+            onPress={() => openTimePicker('endTime')}
+            style={[
+              tw`bg-gray-100 rounded-lg px-3 py-2 items-center`,
+              errors.endTime && tw`border border-red-500`
+            ]}
+          >
+            <Text style={tw`text-sm text-gray-800 font-medium`}>
+              {formatTimeForDisplay(watchEndTime)}
+            </Text>
+          </TouchableOpacity>
+          {errors.endTime && (
+            <Text style={tw`text-red-500 text-xs mt-1 text-center`}>
+              {errors.endTime.message}
+            </Text>
+          )}
+        </View>
 
-        {isDifDays && (
+        {watchIsDifDays && (
           <View style={tw`bg-red-400 px-1.5 py-0.5 rounded-lg`}>
             <Text style={tw`text-white text-xs font-bold`}>+1д</Text>
           </View>
         )}
       </View>
 
-      {/* Четвертая строка: Дата и длительность */}
       <View style={tw`flex-row justify-between items-center mb-2`}>
-        {/* Кнопка даты */}
-        <TouchableOpacity
-          style={tw`bg-gray-100 rounded-lg px-3 py-2 min-w-20 items-center`}
-          onPress={openDatePicker}
-        >
-          <Text style={tw`text-sm text-gray-800 font-medium`}>
-            {formatDateForDisplay(date)}
-          </Text>
-        </TouchableOpacity>
+        <View>
+          <TouchableOpacity
+            style={[
+              tw`bg-gray-100 rounded-lg px-3 py-2 min-w-20 items-center`,
+              errors.date && tw`border border-red-500`
+            ]}
+            onPress={openDatePicker}
+          >
+            <Text style={tw`text-sm text-gray-800 font-medium`}>
+              {formatDateForDisplay(watch('date'))}
+            </Text>
+          </TouchableOpacity>
+          {errors.date && (
+            <Text style={tw`text-red-500 text-xs mt-1 text-center`}>
+              {errors.date.message}
+            </Text>
+          )}
+        </View>
 
-        {/* Суммарное время */}
         <Text style={tw`text-blue-500 text-base font-bold`}>
-          {interval.duration}
+          {watch('duration')}
         </Text>
       </View>
 
-      {/* Пятая строка: Кнопки действий */}
       <View style={tw`flex-row justify-between items-center`}>
-        {/* Кнопка удаления (всегда видна) */}
         <TouchableOpacity
           style={tw`bg-red-500 p-2 rounded-lg min-w-10 items-center`}
           onPress={handleDelete}
@@ -279,8 +311,7 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
           <Text style={tw`text-white text-sm`}>🗑️</Text>
         </TouchableOpacity>
 
-        {/* Кнопки сохранения/отмены (только при изменениях) */}
-        {isChanged && (
+        {isDirty && (
           <View style={tw`flex-row gap-1`}>
             <TouchableOpacity
               style={tw`bg-gray-500 p-2 rounded-lg min-w-10 items-center`}
@@ -290,7 +321,7 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={tw`bg-green-500 p-2 rounded-lg min-w-10 items-center`}
-              onPress={handleSave}
+              onPress={handleSubmit(handleSave)}
             >
               <Text style={tw`text-white text-sm`}>✅</Text>
             </TouchableOpacity>
@@ -304,15 +335,13 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
         isOpen={isSelectOpen}
       />
 
-      {/* Модалка для выбора времени */}
       <TimePickerModal
         isOpen={timePickerOpen}
         onClose={handleTimePickerClose}
         onTimeSelect={handleTimeSelect}
-        initialTime={currentTime}
+        initialTime={editingField ? watch(editingField) : ''}
       />
 
-      {/* DatePicker */}
       {showDatePicker && (
         Platform.OS === 'ios' ? (
           <Modal
