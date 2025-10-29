@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Modal,
+  Modal
 } from 'react-native';
 import tw from 'twrnc';
 
@@ -24,6 +24,9 @@ import {
 } from '../IntervalList/slices/interval/interval.slice';
 import { calculateDuration, dateToString, getCurrentDate, stringToDate } from '../IntervalList/timeHelpers';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { CategorySelector } from './CategorySelector';
+
+
 
 const IntervalForm = () => {
   const dispatch = useAppDispatch();
@@ -33,6 +36,7 @@ const IntervalForm = () => {
   const [category, setCategory] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>(getCurrentDate());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [showCategorySelector, setShowCategorySelector] = useState<boolean>(false);
 
   const curInterval = useSelector(selectCurrentInterval);
   const isOpen = useSelector(selectIsOpen);
@@ -56,6 +60,7 @@ const IntervalForm = () => {
     setEndTime('');
     setCategory('');
     setSelectedDate(dateToString(new Date()));
+    setShowCategorySelector(false);
   };
 
   const handleDateChange = (event: any, date?: Date): void => {
@@ -105,6 +110,10 @@ const IntervalForm = () => {
 
   const showDatepicker = (): void => {
     setShowDatePicker(true);
+  };
+
+  const handleSelectCategory = (selectedCategory: string) => {
+    setCategory(selectedCategory);
   };
 
   return (
@@ -165,13 +174,22 @@ const IntervalForm = () => {
             onChangeText={setEndTime}
           />
 
-          <TextInput
-            style={tw`border border-gray-300 rounded p-2.5 mb-3.5 text-base`}
-            placeholder="Категория"
-            placeholderTextColor="#666"
-            value={category}
-            onChangeText={setCategory}
-          />
+          {/* Кнопка выбора категории */}
+          <TouchableOpacity
+            style={tw`border border-gray-300 rounded p-2.5 mb-3.5 bg-gray-50`}
+            onPress={() => setShowCategorySelector(true)}
+          >
+            <Text style={tw`text-base text-gray-800`}>
+              {category ? category : 'Категория'}
+            </Text>
+          </TouchableOpacity>
+
+          {showCategorySelector && (
+            <CategorySelector
+              onSelectCategory={handleSelectCategory}
+              onClose={() => setShowCategorySelector(false)}
+            />
+          )}
 
           <View style={tw`flex-row justify-between mt-2.5`}>
             <TouchableOpacity
