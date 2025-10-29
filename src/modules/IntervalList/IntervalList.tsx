@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useAppDispatch } from '../../app/store';
-import { loadIntervals, selectIntervals, addInterval } from './interval/interval.slice';
+import { loadIntervals, selectIntervals, addInterval } from './slices/interval/interval.slice';
 import { useSelector } from 'react-redux';
 import IntervalItem from './IntervalItem';
 import tw from 'twrnc';

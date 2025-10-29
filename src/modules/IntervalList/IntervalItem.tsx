@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { baseIntervalSchema, FormIntervalType, StoreIntervalType } from './interval/intervalStorage';
+import { baseIntervalSchema, FormIntervalType, StoreIntervalType } from './slices/interval/intervalStorage';
 import { calculateDuration } from './timeHelpers';
 import { NameField } from './components/NameField';
 import { CategoryField } from './components/CategoryField';

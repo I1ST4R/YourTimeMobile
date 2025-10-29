@@ -1,7 +1,7 @@
 import { FieldErrors, UseFormSetValue, UseFormTrigger, UseFormWatch } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
 import tw from 'twrnc';
-import { FormIntervalType } from '../interval/intervalStorage';
+import { FormIntervalType } from '../slices/interval/intervalStorage';
 import { CategorySelector } from '../../CategorySelector/CategorySelector';
 import { useState } from 'react';
 

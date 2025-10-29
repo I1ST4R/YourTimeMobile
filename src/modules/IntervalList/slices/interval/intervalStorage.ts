@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
-import { validateArray, validateData } from '../../../shared/helpers/validation';
+import { validateArray, validateData } from '../../../../shared/helpers/validation';
 
-const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
+export const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
   message: "Время должно быть в формате ЧЧ:ММ:СС (24-часовой формат)"
 });
 

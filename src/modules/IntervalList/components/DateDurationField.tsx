@@ -1,7 +1,7 @@
 import { FieldErrors, UseFormSetValue, UseFormTrigger, UseFormWatch } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
 import tw from 'twrnc';
-import { FormIntervalType } from '../interval/intervalStorage';
+import { FormIntervalType } from '../slices/interval/intervalStorage';
 import { dateToString, stringToDate } from '../timeHelpers';
 import React, { useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';

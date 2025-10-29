@@ -1,7 +1,7 @@
 import { FieldErrors, UseFormSetValue, UseFormTrigger, UseFormWatch } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
 import tw from 'twrnc';
-import { FormIntervalType } from '../interval/intervalStorage';
+import { FormIntervalType } from '../slices/interval/intervalStorage';
 import TimePickerModal from '../../TimePickerModal/TimePickerModal';
 import { useState } from 'react';
 

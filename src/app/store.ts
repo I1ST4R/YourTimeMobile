@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import intervalReducer from "../modules/IntervalList/interval/interval.slice"
+import intervalReducer from "../modules/IntervalList/slices/interval/interval.slice"
 import categoriesReducer from "../modules/CategoryList/category/category.slice"
 
 export const store = configureStore({

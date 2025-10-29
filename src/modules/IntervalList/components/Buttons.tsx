@@ -1,9 +1,9 @@
 import { Alert, Text, TouchableOpacity, View } from "react-native";
 import tw from 'twrnc';
 import { useAppDispatch } from "../../../app/store";
-import { FormIntervalType, StoreIntervalType } from "../interval/intervalStorage";
+import { FormIntervalType, StoreIntervalType } from "../slices/interval/intervalStorage";
 import { UseFormHandleSubmit, UseFormReset } from "react-hook-form";
-import { deleteInterval, updateInterval } from "../interval/interval.slice";
+import { deleteInterval, updateInterval } from "../slices/interval/interval.slice";
 import { calculateDuration } from "../timeHelpers";
 
 type ButtonsProps = {

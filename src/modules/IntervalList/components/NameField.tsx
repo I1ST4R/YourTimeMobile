@@ -1,7 +1,7 @@
 import { Control, Controller, FieldErrors } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
 import tw from 'twrnc';
-import { FormIntervalType } from "../interval/intervalStorage";
+import { FormIntervalType } from "../slices/interval/intervalStorage";
 
 type NameFieldProps = {
   control: Control<FormIntervalType, any, FormIntervalType>
