@@ -1,27 +1,17 @@
 import {
   View,
-  TouchableOpacity,
   Text,
   SafeAreaView,
   StatusBar,
 } from 'react-native';
 import tw from 'twrnc';
-import { useAppDispatch } from '../app/store';
-import { changeTypeOnCreate, openForm } from '../modules/IntervalForm/form.slice';
 import { useSelector } from 'react-redux';
 import { selectIntervalsCount } from '../modules/IntervalList/slices/interval/interval.slice';
 import IntervalList from '../modules/IntervalList/IntervalList';
 
 const Interval = () => {
-  const dispatch = useAppDispatch()
   
   const intervalsLength = useSelector(selectIntervalsCount)
-
-
-  const handleAddInterval = (): void => {
-    dispatch(changeTypeOnCreate())
-    dispatch(openForm())
-  };
 
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-100`}>
@@ -40,12 +30,6 @@ const Interval = () => {
 
       <View style={tw`flex-1`}><IntervalList/></View>
 
-      <TouchableOpacity
-        style={tw`absolute right-5 bottom-5 w-14 h-14 rounded-full bg-blue-500 justify-center items-center shadow-lg shadow-black/25 elevation-4`}
-        onPress={handleAddInterval}
-      >
-        <Text style={tw`text-2xl text-white font-bold`}>+</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
