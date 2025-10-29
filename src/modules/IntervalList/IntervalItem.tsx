@@ -13,8 +13,9 @@ import {
 import { baseIntervalSchema, FormIntervalType, StoreIntervalType } from './interval/intervalStorage';
 import { calculateDuration, dateToString, stringToDate } from './timeHelpers';
 import { CategorySelector } from '../CategorySelector/CategorySelector';
-import TimePickerModal from '../TimePickerModal/TimePickerModal';
 import { NameField } from './components/NameField';
+import { CategoryField } from './components/CategoryField';
+import { TimeField } from './components/TimeField';
 
 type IntervalItemProps = {
   interval: StoreIntervalType;
@@ -23,8 +24,7 @@ type IntervalItemProps = {
 const IntervalItem = ({ interval }: IntervalItemProps) => {
   const dispatch = useAppDispatch();
   const [isSelectOpen, setIsSelectOpen] = useState(false);
-  const [timePickerOpen, setTimePickerOpen] = useState(false);
-  const [editingField, setEditingField] = useState<'startTime' | 'endTime' | null>(null);
+  
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const {
@@ -51,32 +51,12 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
 
   const watchStartTime = watch('startTime');
   const watchEndTime = watch('endTime');
-  const watchIsDifDays = watch('isDifDays');
 
   useEffect(() => {
     const [duration, isDifDays] = calculateDuration(watchStartTime, watchEndTime);
     setValue('duration', duration, { shouldValidate: true });
     setValue('isDifDays', isDifDays, { shouldValidate: true });
   }, [watchStartTime, watchEndTime, setValue]);
-
-  const openTimePicker = (field: 'startTime' | 'endTime') => {
-    setEditingField(field);
-    setTimePickerOpen(true);
-  };
-
-  const handleTimeSelect = (time: string) => {
-    if (editingField) {
-      setValue(editingField, time, { shouldValidate: true });
-      trigger(editingField);
-    }
-    setTimePickerOpen(false);
-    setEditingField(null);
-  };
-
-  const handleTimePickerClose = () => {
-    setTimePickerOpen(false);
-    setEditingField(null);
-  };
 
   const openDatePicker = () => {
     setShowDatePicker(true);
@@ -106,14 +86,6 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
     setShowDatePicker(false);
   };
 
-  const formatTimeForDisplay = (time: string) => {
-    const [hours, minutes, seconds] = time.split(':');
-    if (seconds === '00') {
-      return `${hours}:${minutes}`;
-    }
-    return `${hours}:${minutes}:${seconds}`;
-  };
-
   const formatDateForDisplay = (dateString: string) => {
     const date = stringToDate(dateString);
     return date.toLocaleDateString('ru-RU', {
@@ -123,7 +95,7 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
     });
   };
 
-  const handleSave = (data: IntervalFormData) => {
+  const handleSave = (data: FormIntervalType) => {
     const [duration, isDifDays] = calculateDuration(data.startTime, data.endTime);
 
     const intervalData = {
@@ -185,72 +157,9 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
     >
       <NameField control={control} errors={errors}/>
 
-      <View style={tw`mb-2`}>
-        <TouchableOpacity
-          onPress={() => setIsSelectOpen(true)}
-          style={[
-            tw`w-full bg-gray-100 rounded-lg px-3 py-2`,
-            errors.category && tw`border border-red-500`
-          ]}
-        >
-          <Text style={tw`text-sm text-gray-600 text-left`}>
-            {watch('category') || 'Категория'}
-          </Text>
-        </TouchableOpacity>
-        {errors.category && (
-          <Text style={tw`text-red-500 text-xs mt-1`}>
-            {errors.category.message}
-          </Text>
-        )}
-      </View>
+      <CategoryField watch={watch} errors={errors} setIsSelectOpen={setIsSelectOpen}/>
 
-      <View style={tw`flex-row items-center gap-2 mb-1`}>
-        <View style={tw`flex-1`}>
-          <TouchableOpacity
-            onPress={() => openTimePicker('startTime')}
-            style={[
-              tw`bg-gray-100 rounded-lg px-3 py-2 items-center`,
-              errors.startTime && tw`border border-red-500`
-            ]}
-          >
-            <Text style={tw`text-sm text-gray-800 font-medium`}>
-              {formatTimeForDisplay(watchStartTime)}
-            </Text>
-          </TouchableOpacity>
-          {errors.startTime && (
-            <Text style={tw`text-red-500 text-xs mt-1 text-center`}>
-              {errors.startTime.message}
-            </Text>
-          )}
-        </View>
-
-        <Text style={tw`text-gray-600 text-sm`}>-</Text>
-
-        <View style={tw`flex-1`}>
-          <TouchableOpacity
-            onPress={() => openTimePicker('endTime')}
-            style={[
-              tw`bg-gray-100 rounded-lg px-3 py-2 items-center`,
-              errors.endTime && tw`border border-red-500`
-            ]}
-          >
-            <Text style={tw`text-sm text-gray-800 font-medium`}>
-              {formatTimeForDisplay(watchEndTime)}
-            </Text>
-          </TouchableOpacity>
-          {errors.endTime && (
-            <Text style={tw`text-red-500 text-xs mt-1 text-center`}>
-              {errors.endTime.message}
-            </Text>
-          )}
-        </View>
-
-        {watchIsDifDays && (
-          <View style={tw`bg-red-400 px-1.5 py-0.5 rounded-lg`}>
-            <Text style={tw`text-white text-xs font-bold`}>+1д</Text>
-          </View>
-        )}
-      </View>
+      <TimeField errors={errors} watch={watch} setValue={setValue} trigger={trigger}/>
 
       <View style={tw`flex-row justify-between items-center mb-2`}>
         <View>
@@ -307,13 +216,6 @@ const IntervalItem = ({ interval }: IntervalItemProps) => {
         onCategoryChange={handleChangeCategory}
         setIsOpen={setIsSelectOpen}
         isOpen={isSelectOpen}
-      />
-
-      <TimePickerModal
-        isOpen={timePickerOpen}
-        onClose={handleTimePickerClose}
-        onTimeSelect={handleTimeSelect}
-        initialTime={editingField ? watch(editingField) : ''}
       />
 
       {showDatePicker && (
