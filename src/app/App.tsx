@@ -22,14 +22,14 @@ export default function App() {
           }}
         >
           <Tab.Screen 
-            name="Interval" 
+            name="Интервалы" 
             component={Interval}
             options={{ tabBarLabel: 'Интервал' }}
           />
           <Tab.Screen 
-            name="Category" 
+            name="Категории" 
             component={Category}
-            options={{ tabBarLabel: '=Категории' }}
+            options={{ tabBarLabel: 'Категории' }}
           />
         </Tab.Navigator>
       </NavigationContainer>

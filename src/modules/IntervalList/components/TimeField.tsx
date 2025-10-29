@@ -29,14 +29,6 @@ export const TimeField = ({
     setTimePickerOpen(true);
   };
 
-  const formatTimeForDisplay = (time: string) => {
-    const [hours, minutes, seconds] = time.split(':');
-    if (seconds === '00') {
-      return `${hours}:${minutes}`;
-    }
-    return `${hours}:${minutes}:${seconds}`;
-  };
-
   const handleTimeSelect = (time: string) => {
     if (editingField) {
       setValue(editingField, time, { shouldValidate: true });
@@ -62,7 +54,7 @@ export const TimeField = ({
           ]}
         >
           <Text style={tw`text-sm text-gray-800 font-medium`}>
-            {formatTimeForDisplay(watchStartTime)}
+            {watchStartTime}
           </Text>
         </TouchableOpacity>
         {errors.startTime && (
@@ -83,7 +75,7 @@ export const TimeField = ({
           ]}
         >
           <Text style={tw`text-sm text-gray-800 font-medium`}>
-            {formatTimeForDisplay(watchEndTime)}
+            {watchEndTime}
           </Text>
         </TouchableOpacity>
         {errors.endTime && (

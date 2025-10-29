@@ -19,9 +19,7 @@ const Interval = () => {
       <StatusBar barStyle="dark-content" />
       
       <View style={tw`bg-white px-5 pt-2.5 pb-5 border-b border-gray-300`}>
-        <Text style={tw`text-2xl font-bold text-gray-800`}>Тайм-трекер</Text>
-        <Text style={tw`text-sm text-gray-600 mt-1`}>Управление временными интервалами</Text>
-        <View style={tw`mt-2 pt-2 border-t border-gray-200`}>
+        <View style={tw`mt-2 pt-2 border-gray-200`}>
           <Text style={tw`text-xs text-gray-500`}>
             Всего интервалов: {intervalsLength}
           </Text>

@@ -1,12 +1,3 @@
-export const formatDateTime = (day: Date, time: string): string => {
-  const dateString = day.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-  return `${dateString} ${time}`;
-};
-
 export const parseTime = (timeStr: string) => {
   const [hours, minutes, seconds] = timeStr.split(':').map(Number);
   return { hours, minutes, seconds };
@@ -50,11 +41,11 @@ export const calculateDuration = (
   return [duration, endTotalSeconds < startTotalSeconds];
 };
 
-export const getCurrentDate = (): string => {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0); 
-  return date.toString();
-};
+// export const getCurrentDate = (): string => {
+//   const date = new Date();
+//   date.setHours(0, 0, 0, 0); 
+//   return date.toString();
+// };
 
 export const getCurrentTime = (): string => {
   const now = new Date();
