@@ -9,7 +9,7 @@ import {
 import tw from 'twrnc';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../app/store';
-import { addCategory, loadCategories, selectCategories } from './category/category.slice';
+import { addCategory, loadCategories, selectCategories } from './category/categoriesApi';
 import { CategoryItem } from '../../screens/CategoryItem';
 import { CategoryType } from './category/categoryStorage'; 
 

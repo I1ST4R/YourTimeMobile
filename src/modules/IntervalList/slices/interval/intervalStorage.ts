@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
 import { validateData } from '../../../../shared/helpers/validation';
+import { categorySchema } from '../../../CategoryList/category/categoryStorage';
 
 export const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
   message: "Время должно быть в формате ЧЧ:ММ:СС (24-часовой формат)"
@@ -17,7 +18,7 @@ export const intervalSchema = z.object({
   endTime: timeSchema,
   duration: timeSchema,
   isDifDays: z.boolean(),
-  category: z.string().max(30, "Описание слишком длинное"),
+  category: categorySchema.shape.name, 
 });
 
 export type IntervalType = z.infer<typeof intervalSchema>;

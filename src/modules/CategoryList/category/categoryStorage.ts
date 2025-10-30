@@ -1,90 +1,145 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
-import { validateArray, validateData } from '../../../shared/helpers/validation';
+import { validateData } from '../../../shared/helpers/validation';
 
-const categorySchema = z.object({
-  id: z.string(),
+export const categorySchema = z.object({
   name: z.string().max(40, "категория слишком длинная")
 });
 
 export type CategoryType = z.infer<typeof categorySchema>;
 
-const STORAGE_CATEGORIES_KEY = 'categories'
+const CATEGORY_KEY_BASE = "category_"
+const LAST_CATEGORY_ID_KEY = "last_category_id"
+const CATEGORIES_LIST_KEY = "categories_list"
 
 export const CategoryStorage = {
-  getAllCategories: async (): Promise<CategoryType[]> => {
+  generateKey: async (): Promise<string> => {
     try {
-      const categories = await AsyncStorage.getItem(STORAGE_CATEGORIES_KEY);
-      const parsedData = categories ? JSON.parse(categories) : [];
-      return validateArray(parsedData, categorySchema);
+      const lastKey = await AsyncStorage.getItem(LAST_CATEGORY_ID_KEY);
+      
+      if (lastKey === null) {
+        await AsyncStorage.setItem(LAST_CATEGORY_ID_KEY, "0");
+        return CATEGORY_KEY_BASE + "0";
+      } else {
+        const lastId = parseInt(lastKey, 10);
+        if (isNaN(lastId)) {
+          await AsyncStorage.setItem(LAST_CATEGORY_ID_KEY, "0");
+          return CATEGORY_KEY_BASE + "0";
+        }   
+        const newId = lastId + 1;
+        const newKey = newId.toString();
+        await AsyncStorage.setItem(LAST_CATEGORY_ID_KEY, newKey);
+        return CATEGORY_KEY_BASE + newKey;
+      }
     } catch (error) {
-      console.error('Error getting categories:', error);
+      console.error('Error generating category key:', error);
+      return CATEGORY_KEY_BASE + Date.now().toString();
+    }
+  },
+
+  getAllCategoriesIds: async (): Promise<string[]> => {
+    try {
+      const categories = await AsyncStorage.getItem(CATEGORIES_LIST_KEY);
+      return categories ? JSON.parse(categories) : [];
+    } catch (error) {
+      console.error('Error getting categories ids:', error);
       return [];
     }
   },
 
-  saveAllCategories: async (
-    categories: CategoryType[],
-  ): Promise<boolean> => {
+  getAllCategories: async (): Promise<CategoryType[]> => {
     try {
-      const validatedCategories = validateArray(categories, categorySchema);
-      if (validatedCategories.length !== categories.length) {
-        throw new Error('Some categories failed validation');
+      const categoryIds = await CategoryStorage.getAllCategoriesIds();
+      const categories: CategoryType[] = [];
+      
+      for (const id of categoryIds) {
+        const category = await CategoryStorage.getCategoryById(id);
+        if (category) {
+          categories.push(category);
+        }
       }
+      
+      return categories;
+    } catch (error) {
+      console.error('Error getting all categories:', error);
+      return [];
+    }
+  },
 
-      await AsyncStorage.setItem(
-        STORAGE_CATEGORIES_KEY,
-        JSON.stringify(validatedCategories),
-      );
+  saveAllCategories: async (categories: CategoryType[]): Promise<boolean> => {
+    try {
+      // Очищаем существующие категории
+      const existingIds = await CategoryStorage.getAllCategoriesIds();
+      for (const id of existingIds) {
+        await AsyncStorage.removeItem(id);
+      }
+      
+      // Сохраняем новые категории
+      const newIds: string[] = [];
+      for (const category of categories) {
+        const validatedCategory = validateData(category, categorySchema);
+        if (!validatedCategory) {
+          throw new Error('Category validation failed');
+        }
+        
+        const newKey = await CategoryStorage.generateKey();
+        await AsyncStorage.setItem(newKey, JSON.stringify(validatedCategory));
+        newIds.push(newKey);
+      }
+      
+      await AsyncStorage.setItem(CATEGORIES_LIST_KEY, JSON.stringify(newIds));
       return true;
     } catch (error) {
-      console.error('Error saving categories:', error);
+      console.error('Error saving all categories:', error);
       return false;
     }
   },
 
-  addCategory: async (category: Omit<CategoryType, 'id'>): Promise<boolean> => {
+  addCategory: async (category: CategoryType): Promise<boolean> => {
     try {
-      const categories = await CategoryStorage.getAllCategories();
-      const newCategory: CategoryType = {
-        ...category,
-        id: Date.now().toString(),
-      };
-      const validatedCategory = validateData(newCategory, categorySchema);
+      const validatedCategory = validateData(category, categorySchema);
       if (!validatedCategory) {
-        throw new Error('Category validation failed');
+        return false;
       }
-
-      categories.push(validatedCategory);
-      return await CategoryStorage.saveAllCategories(categories);
+      
+      const newKey = await CategoryStorage.generateKey();
+      await AsyncStorage.setItem(newKey, JSON.stringify(validatedCategory));
+      
+      const existingIds = await CategoryStorage.getAllCategoriesIds();
+      const updatedIds = [...existingIds, newKey];
+      await AsyncStorage.setItem(CATEGORIES_LIST_KEY, JSON.stringify(updatedIds));
+      
+      return true;
     } catch (error) {
       console.error('Error adding category:', error);
       return false;
     }
   },
 
-  updateCategory: async (
-    id: string,
-    updatedCategory: Partial<Omit<CategoryType, 'id'>>,
-  ): Promise<boolean> => {
+  getCategoryById: async (id: string): Promise<CategoryType | undefined> => {
     try {
-      const categories = await CategoryStorage.getAllCategories();
-      const index = categories.findIndex(category => category.id === id);
-      if (index !== -1) {
-        const mergedCategory = {
-          ...categories[index],
-          ...updatedCategory,
-        };
-        
-        const validatedCategory = validateData(mergedCategory, categorySchema);
-        if (!validatedCategory) {
-          throw new Error('Updated category validation failed');
-        }
+      const category = await AsyncStorage.getItem(id);
+      if (!category) return undefined;
+      
+      const parsed = JSON.parse(category);
+      return validateData(parsed, categorySchema) || undefined;
+    } catch (error) {
+      console.error('Error getting category by id:', error);
+      return undefined;
+    }
+  },
 
-        categories[index] = validatedCategory;
-        return await CategoryStorage.saveAllCategories(categories);
-      }
-      return false;
+  updateCategory: async (id: string, category: Partial<CategoryType>): Promise<boolean> => {
+    try {
+      const existing = await CategoryStorage.getCategoryById(id);
+      if (!existing) return false;
+      
+      const updatedCategory = { ...existing, ...category };
+      const validated = validateData(updatedCategory, categorySchema);
+      if (!validated) return false;
+      
+      await AsyncStorage.setItem(id, JSON.stringify(validated));
+      return true;
     } catch (error) {
       console.error('Error updating category:', error);
       return false;
@@ -93,27 +148,16 @@ export const CategoryStorage = {
 
   deleteCategory: async (id: string): Promise<boolean> => {
     try {
-      const categories = await CategoryStorage.getAllCategories();
-      const filteredCategories = categories.filter(
-        category => category.id !== id,
-      );
-      return await CategoryStorage.saveAllCategories(filteredCategories);
+      await AsyncStorage.removeItem(id);
+      
+      const existingIds = await CategoryStorage.getAllCategoriesIds();
+      const updatedIds = existingIds.filter(key => key !== id);
+      await AsyncStorage.setItem(CATEGORIES_LIST_KEY, JSON.stringify(updatedIds));
+      
+      return true;
     } catch (error) {
       console.error('Error deleting category:', error);
       return false;
     }
-  },
-
-  getCategoryById: async (
-    id: string,
-  ): Promise<CategoryType | undefined> => {
-    try {
-      const categories = await CategoryStorage.getAllCategories();
-      const category = categories.find(cat => cat.id === id);
-      return category ? validateData(category, categorySchema) || undefined : undefined;
-    } catch (error) {
-      console.error('Error getting category by id:', error);
-      return undefined;
-    }
-  },
+  }
 };

@@ -1,18 +1,19 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import {intervalsApi} from "../modules/IntervalList/slices/interval/intervalsApi"
-import categoriesReducer from "../modules/CategoryList/category/category.slice"
+import {categoriesApi} from "../modules/CategoryList/category/categoriesApi"
 import {timerApi} from "../modules/IntervalList/slices/timer/timerApi"
 
 export const store = configureStore({
   reducer: {
     [intervalsApi.reducerPath]: intervalsApi.reducer,
     [timerApi.reducerPath]: timerApi.reducer,
-    categories: categoriesReducer,
+    [categoriesApi.reducerPath]: categoriesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(intervalsApi.middleware)
-    .concat(timerApi.middleware),
+    .concat(timerApi.middleware)
+    .concat(categoriesApi.middleware)
 });
 
 export type RootState = ReturnType<typeof store.getState>;

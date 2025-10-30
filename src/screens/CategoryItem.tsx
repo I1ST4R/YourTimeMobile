@@ -5,7 +5,7 @@ import { useAppDispatch } from '../app/store';
 import {
   deleteCategory,
   updateCategory,
-} from '../modules/CategoryList/category/category.slice';
+} from '../modules/CategoryList/category/categoriesApi';
 import { CategoryType } from '../modules/CategoryList/category/categoryStorage';
 
 export const CategoryItem = ({ category }: { category: CategoryType }) => {

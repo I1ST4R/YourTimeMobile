@@ -27,11 +27,11 @@ export default function App() {
             component={Interval}
             options={{ tabBarLabel: 'Интервал' }}
           />
-          <Tab.Screen 
+          {/* <Tab.Screen 
             name="Категории" 
             component={Category}
             options={{ tabBarLabel: 'Категории' }}
-          />
+          /> */}
           {/* <Tab.Screen 
             name="Анализ" 
             component={Analyze}
