@@ -5,13 +5,12 @@ import { CategoryField } from './components/CategoryField';
 import { TimeField } from './components/TimeField';
 import { DateDurationField } from './components/DateDurationField';
 import tw from 'twrnc';
-import { useSelector } from 'react-redux';
-import { selectTimer } from './slices/timer/timer.slice';
-import { RootState } from '../../app/store';
 import {
   useDeleteIntervalMutation,
   useGetIntervalByIdQuery,
 } from './slices/interval/intervalsApi';
+import { useGetTimerQuery } from './slices/timer/timerApi';
+
 
 type IntervalItemProps = {
   intervalId: string;
@@ -20,9 +19,7 @@ type IntervalItemProps = {
 const IntervalItem = ({ intervalId }: IntervalItemProps) => {
   const { data: interval, isLoading } = useGetIntervalByIdQuery(intervalId);
   const [deleteInterval] = useDeleteIntervalMutation();
-  const timer = useSelector((state: RootState) =>
-    selectTimer(state)(intervalId),
-  );
+  const { data: timer } = useGetTimerQuery(intervalId);
   
   console.log(timer)
   const handleDelete = () => {

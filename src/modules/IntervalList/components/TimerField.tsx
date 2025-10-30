@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import tw from 'twrnc';
-import { useAppDispatch } from '../../../app/store';
-import { saveTimer, clearTimer } from '../slices/timer/timer.slice';
 import { TimerType } from '../slices/timer/timerStorage';
 import { useUpdateIntervalMutation } from '../slices/interval/intervalsApi';
+import { useSaveTimerMutation, useClearTimerMutation } from '../slices/timer/timerApi';
 
 type TimerFieldProps = {
   timer?: TimerType | null;
@@ -15,9 +14,9 @@ export const TimerField = ({
   timer,
   intervalId
 }: TimerFieldProps) => {
-  const dispatch = useAppDispatch();
   const [updateInterval] = useUpdateIntervalMutation();
-  
+  const [saveTimer] = useSaveTimerMutation()
+  const [clearTimer] = useClearTimerMutation()
   const isTimerActive = Boolean(timer);
   const timerStart = timer?.startTime;
   
@@ -61,10 +60,10 @@ export const TimerField = ({
       }
     });
     
-    dispatch(saveTimer({ 
+    saveTimer({ 
       intervalId: intervalId,
       startTime: startTime 
-    }));
+    })
   };
   
   const formatTime = (seconds: number) => {
@@ -85,7 +84,7 @@ export const TimerField = ({
       id: intervalId,
       interval: { endTime }
     });
-    dispatch(clearTimer());
+    clearTimer()
   };
 
   return (

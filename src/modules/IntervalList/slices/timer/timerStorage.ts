@@ -13,12 +13,15 @@ export type TimerType = z.infer<typeof timerSchema>;
 const STORAGE_TIMER_KEY = 'timer'
 
 export const TimerStorage = {
-  getTimer: async (): Promise<TimerType | null> => {
+  getTimer: async (id : string): Promise<TimerType | null> => {
     try {
       const timer = await AsyncStorage.getItem(STORAGE_TIMER_KEY);
       if (!timer) return null;
       const parsedData = JSON.parse(timer);
-      return validateData(parsedData, timerSchema)
+      const validatedData = validateData(parsedData, timerSchema)
+      if (!validatedData) return validatedData
+      if(validatedData.intervalId !== id) return null
+      return validatedData
     } catch (error) {
       console.error('Error getting timer:', error)
       return null;

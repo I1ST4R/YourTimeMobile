@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect,  useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,8 @@ import {
 import tw from 'twrnc';
 
 const ITEM_HEIGHT = 40;
-const VISIBLE_ITEMS = 3; // Уменьшил видимые элементы
-const BUFFER_ITEMS = 1; // Уменьшил буфер
+const VISIBLE_ITEMS = 3; 
+const BUFFER_ITEMS = 1; 
 
 type TimePickerModalProps = {
   isOpen: boolean;

@@ -2,11 +2,10 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import tw from 'twrnc';
 import { useState } from 'react';
 import TimePickerModal from '../../TimePickerModal/TimePickerModal';
-import { useAppDispatch} from '../../../app/store';
-import { clearTimer } from '../slices/timer/timer.slice';
 import { TimerType } from '../slices/timer/timerStorage';
 import { useUpdateIntervalMutation } from '../slices/interval/intervalsApi';
 import { TimerField } from './TimerField';
+import { useClearTimerMutation } from '../slices/timer/timerApi';
 
 type TimeFieldProps = {
   startTime: string,
@@ -21,13 +20,12 @@ export const TimeField = ({
   timer,
   intervalId
 }: TimeFieldProps) => {
-  const dispatch = useAppDispatch();
   const [updateInterval] = useUpdateIntervalMutation();
   const [timePickerOpen, setTimePickerOpen] = useState(false);
   const [editingField, setEditingField] = useState<'startTime' | 'endTime' | null>(null);
   const isTimerActive = timer !== undefined;
   const [isTimerMode, setIsTimerMode] = useState(isTimerActive);
-
+  const [clearTimer] = useClearTimerMutation()
   const openTimePicker = (field: 'startTime' | 'endTime') => {
     setEditingField(field);
     setTimePickerOpen(true);
@@ -48,8 +46,6 @@ export const TimeField = ({
     })
   }
 
-  
-
   const handleTimePickerClose = () => {
     setTimePickerOpen(false);
     setEditingField(null);
@@ -57,7 +53,7 @@ export const TimeField = ({
 
   const handleModeToggle = () => {
     if (isTimerMode && isTimerActive) {
-      dispatch(clearTimer());
+      clearTimer()
     }
     setIsTimerMode(prev => !prev);
   };
