@@ -9,7 +9,6 @@ import { FormIntervalType } from '../slices/interval/intervalStorage';
 
 type TimerFieldProps = {
   setValue: UseFormSetValue<FormIntervalType>
-  watchStartTime: string;
   timer?: TimerType | null;
   intervalId: string;
   trigger: UseFormTrigger<FormIntervalType>
@@ -17,7 +16,6 @@ type TimerFieldProps = {
 
 export const TimerField = ({ 
   setValue,
-  watchStartTime,
   timer,
   intervalId,
   trigger

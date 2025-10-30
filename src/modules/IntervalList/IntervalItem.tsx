@@ -25,15 +25,14 @@ type IntervalItemProps = {
 const IntervalItem = ({ interval }: IntervalItemProps) => {
   const dispatch = useAppDispatch();
   const timer = useSelector((state: RootState) => selectTimer(state)(interval.id));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, ...intervalWithoutId } = interval;
 
   const {
     control,
-    handleSubmit,
     formState: { errors, isDirty },
     setValue,
     watch,
-    reset,
     trigger,
   } = useForm<FormIntervalType>({
     resolver: zodResolver(baseIntervalSchema),

@@ -75,7 +75,6 @@ export const TimeField = ({
         <View style={tw`flex-1`}>
           <TimerField 
             setValue={setValue}
-            watchStartTime={watchStartTime}
             timer={timer} 
             intervalId= {intervalId}
             trigger={trigger}
