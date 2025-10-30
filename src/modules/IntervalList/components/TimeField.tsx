@@ -4,25 +4,39 @@ import tw from 'twrnc';
 import { FormIntervalType } from '../slices/interval/intervalStorage';
 import TimePickerModal from '../../TimePickerModal/TimePickerModal';
 import { useState } from 'react';
+import { TimerField } from './TimerField';
+import { useAppDispatch} from '../../../app/store';
+import { clearTimer } from '../slices/timer/timer.slice';
+import { TimerType } from '../slices/timer/timerStorage';
 
 type TimeFieldProps = {
   errors: FieldErrors<FormIntervalType>
   watch: UseFormWatch<FormIntervalType>
   setValue: UseFormSetValue<FormIntervalType>
   trigger: UseFormTrigger<FormIntervalType>
+  timer?: TimerType | null
+  intervalId: string
 };
 
 export const TimeField = ({ 
   errors, 
   watch,
   setValue,
-  trigger
+  trigger,
+  timer,
+  intervalId
 }: TimeFieldProps) => {
+  const dispatch = useAppDispatch();
   const watchStartTime = watch('startTime');
   const watchEndTime = watch('endTime');
   const watchIsDifDays = watch('isDifDays');
   const [timePickerOpen, setTimePickerOpen] = useState(false);
   const [editingField, setEditingField] = useState<'startTime' | 'endTime' | null>(null);
+
+  // Если есть timer - значит таймер активен для этого интервала
+  const isTimerActive = timer !== undefined;
+  // Автоматически включаем режим таймера если он активен
+  const [isTimerMode, setIsTimerMode] = useState(isTimerActive);
 
   const openTimePicker = (field: 'startTime' | 'endTime') => {
     setEditingField(field);
@@ -31,7 +45,10 @@ export const TimeField = ({
 
   const handleTimeSelect = (time: string) => {
     if (editingField) {
-      setValue(editingField, time, { shouldValidate: true });
+      setValue(editingField, time, { 
+        shouldValidate: true,
+        shouldDirty: true 
+      });
       trigger(editingField);
     }
     setTimePickerOpen(false);
@@ -43,6 +60,40 @@ export const TimeField = ({
     setEditingField(null);
   };
 
+  const handleModeToggle = () => {
+    if (isTimerMode && isTimerActive) {
+      dispatch(clearTimer());
+    }
+    setIsTimerMode(prev => !prev);
+  };
+
+  // Если включен режим таймера - показываем компонент таймера
+  if (isTimerMode) {
+    return (
+      <View style={tw`flex-row items-center gap-2 mb-1`}>
+        {/* Таймер слева */}
+        <View style={tw`flex-1`}>
+          <TimerField 
+            setValue={setValue}
+            watchStartTime={watchStartTime}
+            timer={timer} 
+            intervalId= {intervalId}
+            trigger={trigger}
+          />
+        </View>
+        
+        {/* Кнопка переключения обратно СПРАВА */}
+        <TouchableOpacity
+          onPress={handleModeToggle}
+          style={tw`bg-gray-500 rounded-lg px-3 py-2 items-center justify-center min-w-12`}
+        >
+          <Text style={tw`text-white text-sm font-bold`}>✏️</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Иначе показываем обычный выбор времени
   return (
     <View style={tw`flex-row items-center gap-2 mb-1`}>
       <View style={tw`flex-1`}>
@@ -90,6 +141,14 @@ export const TimeField = ({
           <Text style={tw`text-white text-xs font-bold`}>+1д</Text>
         </View>
       )}
+
+      {/* Кнопка таймера СПРАВА */}
+      <TouchableOpacity
+        onPress={handleModeToggle}
+        style={tw`bg-blue-500 rounded-lg px-3 py-2 items-center justify-center min-w-12`}
+      >
+        <Text style={tw`text-white text-sm font-bold`}>⏱️</Text>
+      </TouchableOpacity>
 
       <TimePickerModal
         isOpen={timePickerOpen}

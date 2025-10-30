@@ -28,15 +28,8 @@ export const calculateDuration = (
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  let duration: string;
-
-  if (hours > 0) {
-    duration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  } else if (minutes > 0) {
-    duration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  } else {
-    duration = `00:${seconds.toString().padStart(2, '0')}`;
-  }
+  // Всегда показываем часы, даже если они равны 0
+  const duration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
   return [duration, endTotalSeconds < startTotalSeconds];
 };

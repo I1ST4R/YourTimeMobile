@@ -1,9 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
 import { validateData } from '../../../../shared/helpers/validation';
-import { timeSchema } from '../interval/intervalStorage';
 
-export const timerSchema = timeSchema.or(z.literal(''));
+
+export const timerSchema = z.object({
+  intervalId: z.string(), 
+  startTime: z.string().datetime(), 
+});
+
 export type TimerType = z.infer<typeof timerSchema>;
 
 const STORAGE_TIMER_KEY = 'timer'
@@ -31,6 +35,17 @@ export const TimerStorage = {
       return true;
     } catch (error) {
       console.error('Error saving timer:', error);
+      return false;
+    }
+  },
+
+  // Добавляем метод для очистки
+  clearTimer: async (): Promise<boolean> => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_TIMER_KEY);
+      return true;
+    } catch (error) {
+      console.error('Error clearing timer:', error);
       return false;
     }
   },

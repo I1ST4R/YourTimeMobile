@@ -11,12 +11,14 @@ import { useSelector } from 'react-redux';
 import IntervalItem from './IntervalItem';
 import tw from 'twrnc';
 import { dateToString, getCurrentTime } from './timeHelpers';
+import { getTimer } from './slices/timer/timer.slice';
 
 const IntervalList = () => {
   const dispatch = useAppDispatch()
   
   useEffect(() => {
     dispatch(loadIntervals())
+    dispatch(getTimer())
   },[dispatch])
   
   const intervals = useSelector(selectIntervals)

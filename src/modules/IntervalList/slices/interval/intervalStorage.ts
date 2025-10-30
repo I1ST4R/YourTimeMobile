@@ -98,7 +98,7 @@ export const TimeIntervalStorage = {
           ...updatedInterval,
         };
         
-        // Валидируем обновленный интервал
+        console.log(mergedInterval)
         const validatedInterval = validateData(mergedInterval, storeIntervalSchema);
         if (!validatedInterval) {
           throw new Error('Updated interval validation failed');

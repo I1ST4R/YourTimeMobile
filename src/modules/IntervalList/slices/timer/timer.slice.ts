@@ -24,14 +24,16 @@ export const getTimer = createAsyncThunk(
 
 export const saveTimer = createAsyncThunk(
   'timer/saveTimer',
-  async (timer: TimerType, { dispatch }) => {
-    dispatch(setTimer(timer))
-    const success = await TimerStorage.saveTimer(timer); 
+  async ({ intervalId, startTime }: { intervalId: string; startTime: string }, { dispatch }) => {
+    const timerData = { intervalId, startTime };
+    dispatch(setTimer(timerData));
+    
+    const success = await TimerStorage.saveTimer(timerData); 
     if (!success) {
       dispatch(setTimer(null));
       throw new Error('Failed to save timer');
     }
-    return timer;
+    return timerData;
   }
 );
 
@@ -39,7 +41,8 @@ export const clearTimer = createAsyncThunk(
   'timer/clearTimer',
   async (_, { dispatch }) => {
     dispatch(setTimer(null));
-    const success = await TimerStorage.saveTimer("");
+    
+    const success = await TimerStorage.clearTimer();
     if (!success) {
       const previousTimer = await TimerStorage.getTimer();
       dispatch(setTimer(previousTimer));
@@ -58,10 +61,8 @@ const timerSlice = createSlice({
     }
   },
   selectors: {
-    selectTimer: (state) => state.timer,
-    selectTimerLoading: (state) => state.loading,
-    selectTimerError: (state) => state.error,
-    selectIsTimerActive: (state) => state.timer !== null, 
+    selectTimer: (state) => (intervalId: string) => 
+      state.timer?.intervalId === intervalId ? state.timer : null,
   },
   extraReducers: (builder) => {
     builder
@@ -104,9 +105,6 @@ const timerSlice = createSlice({
 export const { setTimer } = timerSlice.actions;
 export const { 
   selectTimer, 
-  selectTimerLoading, 
-  selectTimerError, 
-  selectIsTimerActive 
 } = timerSlice.selectors;
 
 export default timerSlice.reducer;

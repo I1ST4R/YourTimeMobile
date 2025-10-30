@@ -11,13 +11,15 @@ type DateDurationFieldProps = {
   errors: FieldErrors<FormIntervalType>
   setValue: UseFormSetValue<FormIntervalType>
   trigger: UseFormTrigger<FormIntervalType>
+  isTimerActive: boolean // ← получаем пропс
 };
 
 export const DateDurationField = ({
   watch,
   errors,
   setValue,
-  trigger
+  trigger,
+  isTimerActive // ← добавляем в параметры
 }: DateDurationFieldProps) => {
   const formatDateForDisplay = (dateString: string) => {
     const date = stringToDate(dateString);
@@ -34,12 +36,14 @@ export const DateDurationField = ({
 
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false)
-
+  
     if (date) {
       const newDateString = dateToString(date);
-      setValue('date', newDateString, { shouldValidate: true });
+      setValue('date', newDateString, { 
+        shouldValidate: true,
+        shouldDirty: true 
+      });
       trigger('date');
-      setShowDatePicker(false)
     }
   };
 
@@ -64,9 +68,11 @@ export const DateDurationField = ({
         )}
       </View>
 
-      <Text style={tw`text-blue-500 text-base font-bold`}>
-        {watch('duration')}
-      </Text>
+      {!isTimerActive && (
+        <Text style={tw`text-blue-500 text-base font-bold`}>
+          {watch('duration')}
+        </Text>
+      )}
 
       {showDatePicker && (
         <DateTimePicker

@@ -22,7 +22,10 @@ export const CategoryField = ({
   const [isSelectOpen, setIsSelectOpen] = useState(false);
 
   const handleChangeCategory = (value: string) => {
-    setValue('category', value, { shouldValidate: true });
+    setValue('category', value, { 
+      shouldValidate: true,
+      shouldDirty: true 
+    });
     trigger('category');
   };
 
