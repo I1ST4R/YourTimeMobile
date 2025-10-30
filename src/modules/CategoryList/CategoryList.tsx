@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,40 +7,39 @@ import {
   FlatList
 } from 'react-native';
 import tw from 'twrnc';
-import { useSelector } from 'react-redux';
-import { useAppDispatch } from '../../app/store';
-import { addCategory, loadCategories, selectCategories } from './category/categoriesApi';
-import { CategoryItem } from '../../screens/CategoryItem';
-import { CategoryType } from './category/categoryStorage'; 
+import { useGetAllCategoriesQuery, useAddCategoryMutation } from './category/categoriesApi';
+import { CategoryItem } from './CategoryItem';
 
 const CategoryList = () => {
-  const dispatch = useAppDispatch()
   const [newCategoryName, setNewCategoryName] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredCategories, setFilteredCategories] = useState<CategoryType[]>([]) 
   
-  const categories = useSelector(selectCategories)
+  const { data: categories = [], isLoading, error } = useGetAllCategoriesQuery();
+  const [addCategory, { isLoading: isAdding }] = useAddCategoryMutation();
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const filtered = categories.filter(category =>
-        category.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      setFilteredCategories(filtered)
-    }, 300)
-
-    return () => clearTimeout(timeoutId)
-  }, [searchQuery, categories])
-
-  useEffect(() => {
-    dispatch(loadCategories())
-  }, [dispatch])
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return categories;
+    
+    return categories.filter(category =>
+      category.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, categories]);
 
   const handleAddCategory = () => {
     if (newCategoryName.trim() !== '') {
-      dispatch(addCategory({ name: newCategoryName.trim() }))
-      setNewCategoryName('') 
+      addCategory({ name: newCategoryName.trim() })
+        .then(() => {
+          setNewCategoryName('');
+        });
     }
+  }
+
+  if (error) {
+    return (
+      <View style={tw`flex-1 justify-center items-center p-4`}>
+        <Text style={tw`text-red-500 text-lg`}>Ошибка загрузки категорий</Text>
+      </View>
+    );
   }
 
   return(
@@ -58,10 +57,14 @@ const CategoryList = () => {
         />
         <TouchableOpacity 
           onPress={handleAddCategory}
-          style={tw`bg-green-500 rounded-lg px-4 justify-center`}
-          disabled={!newCategoryName.trim()} 
+          style={tw`bg-green-500 rounded-lg px-4 justify-center ${
+            !newCategoryName.trim() || isAdding ? 'opacity-50' : ''
+          }`}
+          disabled={!newCategoryName.trim() || isAdding} 
         >
-          <Text style={tw`text-white font-bold`}>Создать</Text>
+          <Text style={tw`text-white font-bold`}>
+            {isAdding ? 'Создание...' : 'Создать'}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -75,11 +78,14 @@ const CategoryList = () => {
         />
       </View>
 
-      {/* Список категорий */}
-      {filteredCategories.length > 0 ? (
+      {isLoading ? (
+        <View style={tw`flex-1 justify-center items-center`}>
+          <Text style={tw`text-gray-500 text-lg`}>Загрузка...</Text>
+        </View>
+      ) : filteredCategories.length > 0 ? (
         <FlatList
           data={filteredCategories}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.name}
           renderItem={({ item }) => <CategoryItem category={item} />}
           showsVerticalScrollIndicator={false}
         />

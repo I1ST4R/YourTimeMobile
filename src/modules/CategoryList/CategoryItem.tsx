@@ -1,26 +1,23 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text } from 'react-native';
 import tw from 'twrnc';
-import { useAppDispatch } from '../app/store';
-import {
-  deleteCategory,
-  updateCategory,
-} from '../modules/CategoryList/category/categoriesApi';
-import { CategoryType } from '../modules/CategoryList/category/categoryStorage';
+import { useUpdateCategoryMutation, useDeleteCategoryMutation } from './category/categoriesApi';
+import { CategoryType } from './category/categoryStorage';
+
 
 export const CategoryItem = ({ category }: { category: CategoryType }) => {
-  const dispatch = useAppDispatch();
   const [categoryName, setCategoryName] = useState(category.name);
   const [isEditing, setIsEditing] = useState(false);
+  
+  const [updateCategory] = useUpdateCategoryMutation();
+  const [deleteCategory] = useDeleteCategoryMutation();
 
   const handleUpdate = () => {
     if (categoryName.trim() !== '' && categoryName !== category.name) {
-      dispatch(
-        updateCategory({
-          id: category.id,
-          category: { ...category, name: categoryName.trim() },
-        }),
-      );
+      updateCategory({
+        id: category.name,
+        category: { name: categoryName.trim() },
+      });
     }
     setIsEditing(false);
   };
@@ -33,9 +30,7 @@ export const CategoryItem = ({ category }: { category: CategoryType }) => {
   };
 
   return (
-    <View
-      style={tw`flex-row items-center border-b border-gray-200 min-h-16`}
-    >
+    <View style={tw`flex-row items-center border-b border-gray-200 min-h-16`}>
       <TextInput
         value={categoryName}
         onChangeText={handleInputChange}
@@ -54,7 +49,7 @@ export const CategoryItem = ({ category }: { category: CategoryType }) => {
       )}
 
       <TouchableOpacity
-        onPress={() => dispatch(deleteCategory(category.id))}
+        onPress={() => deleteCategory(category.name)}
         style={tw`bg-red-500 rounded-lg p-3 w-12 h-12 justify-center items-center`}
       >
         <Text style={tw`text-white font-bold text-lg`}>🗑️</Text>
