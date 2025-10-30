@@ -4,23 +4,19 @@ import tw from 'twrnc';
 import { useAppDispatch } from '../../../app/store';
 import { saveTimer, clearTimer } from '../slices/timer/timer.slice';
 import { TimerType } from '../slices/timer/timerStorage';
-import { UseFormSetValue, UseFormTrigger } from 'react-hook-form';
-import { FormIntervalType } from '../slices/interval/intervalStorage';
+import { useUpdateIntervalMutation } from '../slices/interval/intervalsApi';
 
 type TimerFieldProps = {
-  setValue: UseFormSetValue<FormIntervalType>
   timer?: TimerType | null;
   intervalId: string;
-  trigger: UseFormTrigger<FormIntervalType>
 };
 
 export const TimerField = ({ 
-  setValue,
   timer,
-  intervalId,
-  trigger
+  intervalId
 }: TimerFieldProps) => {
   const dispatch = useAppDispatch();
+  const [updateInterval] = useUpdateIntervalMutation();
   
   const isTimerActive = Boolean(timer);
   const timerStart = timer?.startTime;
@@ -37,7 +33,6 @@ export const TimerField = ({
         const now = new Date();
         const diff = Math.floor((now.getTime() - startTime.getTime()) / 1000);
         setElapsedSeconds(diff);
-        
       };
 
       updateTimer();
@@ -47,20 +42,24 @@ export const TimerField = ({
     return () => {
       if (timerInterval) clearInterval(timerInterval);
     };
-  }, [isTimerActive, timerStart]); // Убрал setValue из зависимостей
+  }, [isTimerActive, timerStart]);
 
   const handleStartTimer = () => {
     const startTime = new Date().toISOString();
     const now = new Date();
     
-    // Форматируем время
     const hours = now.getHours();
     const minutes = now.getMinutes().toString().padStart(2, '0');
     const seconds = now.getSeconds().toString().padStart(2, '0');
     const formattedTime = `${hours}:${minutes}:${seconds}`;
-    console.log(formattedTime)
-    setValue('startTime', formattedTime, { shouldDirty: true });
-    setValue('endTime', formattedTime, { shouldDirty: true });
+    
+    updateInterval({
+      id: intervalId,
+      interval: { 
+        startTime: formattedTime,
+        endTime: formattedTime
+      }
+    });
     
     dispatch(saveTimer({ 
       intervalId: intervalId,
@@ -82,9 +81,10 @@ export const TimerField = ({
     const seconds = now.getSeconds().toString().padStart(2, '0');
     const endTime = `${hours}:${minutes}:${seconds}`;
     
-    // ТОЛЬКО ПРИ ОСТАНОВКЕ обновляем поле
-    setValue('endTime', endTime, { shouldDirty: true });
-    trigger();
+    updateInterval({
+      id: intervalId,
+      interval: { endTime }
+    });
     
     dispatch(clearTimer());
   };

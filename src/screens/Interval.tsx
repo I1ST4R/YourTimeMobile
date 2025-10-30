@@ -5,13 +5,12 @@ import {
   StatusBar,
 } from 'react-native';
 import tw from 'twrnc';
-import { useSelector } from 'react-redux';
-import { selectIntervalsCount } from '../modules/IntervalList/slices/interval/interval.slice';
 import IntervalList from '../modules/IntervalList/IntervalList';
+import { useGetIntervalIdsQuery } from '../modules/IntervalList/slices/interval/intervalsApi';
 
 const Interval = () => {
-  
-  const intervalsLength = useSelector(selectIntervalsCount)
+  const { data: intervalIds = [] } = useGetIntervalIdsQuery();
+  const intervalsLength = intervalIds.length;
 
   return (
     <SafeAreaView style={tw`flex-1 bg-gray-100`}>

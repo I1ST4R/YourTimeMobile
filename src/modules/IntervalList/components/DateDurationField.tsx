@@ -1,26 +1,27 @@
-import { FieldErrors, UseFormSetValue, UseFormTrigger, UseFormWatch } from 'react-hook-form';
 import { Text, TouchableOpacity, View } from 'react-native';
 import tw from 'twrnc';
-import { FormIntervalType } from '../slices/interval/intervalStorage';
 import { dateToString, stringToDate } from '../timeHelpers';
 import React, { useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useUpdateIntervalMutation } from '../slices/interval/intervalsApi';
 
 type DateDurationFieldProps = {
-  watch: UseFormWatch<FormIntervalType>
-  errors: FieldErrors<FormIntervalType>
-  setValue: UseFormSetValue<FormIntervalType>
-  trigger: UseFormTrigger<FormIntervalType>
-  isTimerActive: boolean // ← получаем пропс
+  date: string;
+  duration: string;
+  intervalId: string;
+  isTimerActive: boolean;
 };
 
 export const DateDurationField = ({
-  watch,
-  errors,
-  setValue,
-  trigger,
-  isTimerActive // ← добавляем в параметры
+  date,
+  duration,
+  intervalId,
+  isTimerActive
 }: DateDurationFieldProps) => {
+  const [updateInterval] = useUpdateIntervalMutation();
+  const [currentDate, setCurrentDate] = useState(date);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   const formatDateForDisplay = (dateString: string) => {
     const date = stringToDate(dateString);
     return date.toLocaleDateString('ru-RU', {
@@ -30,20 +31,18 @@ export const DateDurationField = ({
     });
   };
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const selectedDate = stringToDate(watch('date'));
+  const selectedDate = stringToDate(currentDate);
 
   const handleDateChange = (event: any, date?: Date) => {
-    setShowDatePicker(false)
+    setShowDatePicker(false);
   
     if (date) {
       const newDateString = dateToString(date);
-      setValue('date', newDateString, { 
-        shouldValidate: true,
-        shouldDirty: true 
+      setCurrentDate(newDateString);
+      updateInterval({
+        id: intervalId,
+        interval: { date: newDateString }
       });
-      trigger('date');
     }
   };
 
@@ -51,26 +50,18 @@ export const DateDurationField = ({
     <View style={tw`flex-row justify-between items-center mb-2`}>
       <View>
         <TouchableOpacity
-          style={[
-            tw`bg-gray-100 rounded-lg px-3 py-2 min-w-20 items-center`,
-            errors.date && tw`border border-red-500`,
-          ]}
+          style={tw`bg-gray-100 rounded-lg px-3 py-2 min-w-20 items-center`}
           onPress={() => setShowDatePicker(true)}
         >
           <Text style={tw`text-sm text-gray-800 font-medium`}>
-            {formatDateForDisplay(watch('date'))}
+            {formatDateForDisplay(currentDate)}
           </Text>
         </TouchableOpacity>
-        {errors.date && (
-          <Text style={tw`text-red-500 text-xs mt-1 text-center`}>
-            {errors.date.message}
-          </Text>
-        )}
       </View>
 
       {!isTimerActive && (
         <Text style={tw`text-blue-500 text-base font-bold`}>
-          {watch('duration')}
+          {duration}
         </Text>
       )}
 

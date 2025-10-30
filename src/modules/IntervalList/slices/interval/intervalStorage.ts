@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
-import { validateArray, validateData } from '../../../../shared/helpers/validation';
+import { validateData } from '../../../../shared/helpers/validation';
 
 export const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
   message: "Время должно быть в формате ЧЧ:ММ:СС (24-часовой формат)"
@@ -10,8 +10,7 @@ const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
   message: "Дата должна быть в формате ГГГГ-ММ-ДД"
 });
 
-// Базовая схема без refine
-export const baseIntervalSchema = z.object({
+export const intervalSchema = z.object({
   name: z.string().max(100, "Название слишком длинное"),
   date: dateSchema,
   startTime: timeSchema,
@@ -21,93 +20,89 @@ export const baseIntervalSchema = z.object({
   category: z.string().max(30, "Описание слишком длинное"),
 });
 
-export const storeIntervalSchema = baseIntervalSchema.extend({
-  id: z.string(),
-});
+export type IntervalType = z.infer<typeof intervalSchema>;
 
-export type FormIntervalType = z.infer<typeof baseIntervalSchema>;
-export type StoreIntervalType = z.infer<typeof storeIntervalSchema>;
-
-const STORAGE_INTERVALS_KEY = 'time_intervals'
+const INTERVAL_KEY_BASE = "interval_"
+const LAST_ID_KEY = "last_id"
+const INTERVALS_LIST_KEY = "intervals_list"
 
 export const TimeIntervalStorage = {
-  getAllIntervals: async (): Promise<StoreIntervalType[]> => {
+  generateKey: async (): Promise<string> => {
     try {
-      const intervals = await AsyncStorage.getItem(STORAGE_INTERVALS_KEY);
-      const parsedData = intervals ? JSON.parse(intervals) : [];
-      return validateArray(parsedData, storeIntervalSchema);
+      const lastKey = await AsyncStorage.getItem(LAST_ID_KEY);
+      
+      if (lastKey === null) {
+        await AsyncStorage.setItem(LAST_ID_KEY, "0");
+        return INTERVAL_KEY_BASE + "0";
+      } else {
+        const lastId = parseInt(lastKey, 10);
+        if (isNaN(lastId)) {
+          await AsyncStorage.setItem(LAST_ID_KEY, "0");
+          return INTERVAL_KEY_BASE + "0";
+        }   
+        const newId = lastId + 1;
+        const newKey = newId.toString();
+        await AsyncStorage.setItem(LAST_ID_KEY, newKey);
+        return INTERVAL_KEY_BASE + newKey;
+      }
     } catch (error) {
-      console.error('Error getting intervals:', error);
+      console.error('Error generating key:', error);
+      return INTERVAL_KEY_BASE + Date.now().toString();
+    }
+  },
+
+  getAllIntervalsId: async (): Promise<string[]> => {
+    try {
+      const intervals = await AsyncStorage.getItem(INTERVALS_LIST_KEY);
+      return intervals ? JSON.parse(intervals) : [];
+    } catch (error) {
+      console.error('Error getting intervals ids:', error);
       return [];
     }
   },
 
-  saveAllIntervals: async (
-    intervals: StoreIntervalType[],
-  ): Promise<boolean> => {
+  addInterval: async (interval: IntervalType): Promise<boolean> => {
     try {
-      // Валидируем данные перед сохранением
-      const validatedIntervals = validateArray(intervals, storeIntervalSchema);
-      if (validatedIntervals.length !== intervals.length) {
-        throw new Error('Some intervals failed validation');
+      const validatedInterval = validateData(interval, intervalSchema);
+      if (!validatedInterval) {
+        return false;
       }
-
-      await AsyncStorage.setItem(
-        STORAGE_INTERVALS_KEY,
-        JSON.stringify(validatedIntervals),
-      );
+      const newKey = await TimeIntervalStorage.generateKey();
+      await AsyncStorage.setItem(newKey, JSON.stringify(validatedInterval));
+      const existingIds = await TimeIntervalStorage.getAllIntervalsId();
+      const updatedIds = [...existingIds, newKey];
+      await AsyncStorage.setItem(INTERVALS_LIST_KEY, JSON.stringify(updatedIds));
       return true;
     } catch (error) {
-      console.error('Error saving intervals:', error);
+      console.error('9. Error in addInterval:', error);
       return false;
     }
   },
 
-  addInterval: async (interval: FormIntervalType): Promise<boolean> => {
+  getIntervalById: async (id: string): Promise<IntervalType | undefined> => {
     try {
-      const intervals = await TimeIntervalStorage.getAllIntervals();
-      const newInterval: StoreIntervalType = {
-        ...interval,
-        id: Date.now().toString(),
-      };
+      const interval = await AsyncStorage.getItem(id);
+      if (!interval) return undefined;
       
-      // Валидируем новый интервал
-      const validatedInterval = validateData(newInterval, storeIntervalSchema);
-      if (!validatedInterval) {
-        throw new Error('Interval validation failed');
-      }
-
-      intervals.push(validatedInterval);
-      return await TimeIntervalStorage.saveAllIntervals(intervals);
+      const parsed = JSON.parse(interval);
+      return validateData(parsed, intervalSchema) || undefined;
     } catch (error) {
-      console.error('Error adding interval:', error);
-      return false;
+      console.error('Error getting interval by id:', error);
+      return undefined;
     }
   },
 
-  updateInterval: async (
-    id: string,
-    updatedInterval: Partial<FormIntervalType>,
-  ): Promise<boolean> => {
+  updateInterval: async (id: string, interval: Partial<IntervalType>): Promise<boolean> => {
     try {
-      const intervals = await TimeIntervalStorage.getAllIntervals();
-      const index = intervals.findIndex(interval => interval.id === id);
-      if (index !== -1) {
-        const mergedInterval = {
-          ...intervals[index],
-          ...updatedInterval,
-        };
-        
-        console.log(mergedInterval)
-        const validatedInterval = validateData(mergedInterval, storeIntervalSchema);
-        if (!validatedInterval) {
-          throw new Error('Updated interval validation failed');
-        }
-
-        intervals[index] = validatedInterval;
-        return await TimeIntervalStorage.saveAllIntervals(intervals);
-      }
-      return false;
+      const existing = await TimeIntervalStorage.getIntervalById(id);
+      if (!existing) return false;
+      
+      const updatedInterval = { ...existing, ...interval };
+      const validated = validateData(updatedInterval, intervalSchema);
+      if (!validated) return false;
+      
+      await AsyncStorage.setItem(id, JSON.stringify(validated));
+      return true;
     } catch (error) {
       console.error('Error updating interval:', error);
       return false;
@@ -116,27 +111,16 @@ export const TimeIntervalStorage = {
 
   deleteInterval: async (id: string): Promise<boolean> => {
     try {
-      const intervals = await TimeIntervalStorage.getAllIntervals();
-      const filteredIntervals = intervals.filter(
-        interval => interval.id !== id,
-      );
-      return await TimeIntervalStorage.saveAllIntervals(filteredIntervals);
+      await AsyncStorage.removeItem(id);
+      
+      const existingIds = await TimeIntervalStorage.getAllIntervalsId();
+      const updatedIds = existingIds.filter(key => key !== id);
+      await AsyncStorage.setItem(INTERVALS_LIST_KEY, JSON.stringify(updatedIds));
+      
+      return true;
     } catch (error) {
       console.error('Error deleting interval:', error);
       return false;
     }
-  },
-
-  getIntervalById: async (
-    id: string,
-  ): Promise<StoreIntervalType | undefined> => {
-    try {
-      const intervals = await TimeIntervalStorage.getAllIntervals();
-      const interval = intervals.find(interval => interval.id === id);
-      return interval ? validateData(interval, storeIntervalSchema) || undefined : undefined;
-    } catch (error) {
-      console.error('Error getting interval by id:', error);
-      return undefined;
-    }
-  },
+  }
 };
