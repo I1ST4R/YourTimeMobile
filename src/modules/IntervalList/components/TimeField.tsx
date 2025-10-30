@@ -23,8 +23,6 @@ export const TimeField = ({
 }: TimeFieldProps) => {
   const dispatch = useAppDispatch();
   const [updateInterval] = useUpdateIntervalMutation();
-  const [currentStartTime, setCurrentStartTime] = useState(startTime);
-  const [currentEndTime, setCurrentEndTime] = useState(endTime);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
   const [editingField, setEditingField] = useState<'startTime' | 'endTime' | null>(null);
   const isTimerActive = timer !== undefined;
@@ -35,23 +33,22 @@ export const TimeField = ({
     setTimePickerOpen(true);
   };
 
-  const handleTimeSelect = (time: string) => {
-    if (editingField === 'startTime') {
-      setCurrentStartTime(time);
-      updateInterval({
-        id: intervalId,
-        interval: { startTime: time }
-      });
-    } else if (editingField === 'endTime') {
-      setCurrentEndTime(time);
-      updateInterval({
-        id: intervalId,
-        interval: { endTime: time }
-      });
-    }
-    setTimePickerOpen(false);
-    setEditingField(null);
-  };
+  const handleChange = (time: string) => {
+    if(editingField === 'startTime') updateInterval({
+      id: intervalId,
+      interval : {
+        startTime: time
+      }
+    })
+    if(editingField === 'endTime') updateInterval({
+      id: intervalId,
+      interval : {
+        endTime: time
+      }
+    })
+  }
+
+  
 
   const handleTimePickerClose = () => {
     setTimePickerOpen(false);
@@ -93,7 +90,7 @@ export const TimeField = ({
           style={tw`bg-gray-100 rounded-lg px-3 py-2 items-center`}
         >
           <Text style={tw`text-sm text-gray-800 font-medium`}>
-            {currentStartTime}
+            {startTime}
           </Text>
         </TouchableOpacity>
       </View>
@@ -106,7 +103,7 @@ export const TimeField = ({
           style={tw`bg-gray-100 rounded-lg px-3 py-2 items-center`}
         >
           <Text style={tw`text-sm text-gray-800 font-medium`}>
-            {currentEndTime}
+            {endTime}
           </Text>
         </TouchableOpacity>
       </View>
@@ -121,8 +118,8 @@ export const TimeField = ({
       <TimePickerModal
         isOpen={timePickerOpen}
         onClose={handleTimePickerClose}
-        onTimeSelect={handleTimeSelect}
-        initialTime={editingField === 'startTime' ? currentStartTime : currentEndTime}
+        initialTime={editingField === 'startTime' ? startTime : endTime}
+        timeChange={handleChange}
       />
     </View>
   );

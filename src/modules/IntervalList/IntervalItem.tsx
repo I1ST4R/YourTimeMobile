@@ -24,7 +24,7 @@ const IntervalItem = ({ intervalId }: IntervalItemProps) => {
     selectTimer(state)(intervalId),
   );
   
-
+  console.log(timer)
   const handleDelete = () => {
     Alert.alert(
       'Удаление интервала',

@@ -85,7 +85,6 @@ export const TimerField = ({
       id: intervalId,
       interval: { endTime }
     });
-    
     dispatch(clearTimer());
   };
 

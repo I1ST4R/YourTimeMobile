@@ -13,7 +13,6 @@ import { useAddIntervalMutation, useGetIntervalIdsQuery } from './slices/interva
 const IntervalList = () => {
   const { data: intervalIds = [], isLoading, error } = useGetIntervalIdsQuery();
   const [addInterval] = useAddIntervalMutation();
-  console.log("List render")
   const handleAddNewInterval = async () => {
     try {
       await addInterval({
