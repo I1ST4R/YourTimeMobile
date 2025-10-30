@@ -70,7 +70,8 @@ const IntervalItem = ({ intervalId }: IntervalItemProps) => {
         <View style={tw`flex-1`}>
           <DateDurationField
             date={interval.date}
-            duration={interval.duration}
+            startTime={interval.startTime}
+            endTime={interval.endTime}
             intervalId={intervalId}
             isTimerActive = {Boolean(timer)}
           />
