@@ -21,7 +21,6 @@ const IntervalItem = ({ intervalId }: IntervalItemProps) => {
   const [deleteInterval] = useDeleteIntervalMutation();
   const { data: timer } = useGetTimerQuery(intervalId);
   
-  console.log(timer)
   const handleDelete = () => {
     Alert.alert(
       'Удаление интервала',

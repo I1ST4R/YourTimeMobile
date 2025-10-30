@@ -23,7 +23,7 @@ export const TimeField = ({
   const [updateInterval] = useUpdateIntervalMutation();
   const [timePickerOpen, setTimePickerOpen] = useState(false);
   const [editingField, setEditingField] = useState<'startTime' | 'endTime' | null>(null);
-  const isTimerActive = timer !== undefined;
+  const isTimerActive = timer !== null;
   const [isTimerMode, setIsTimerMode] = useState(isTimerActive);
   const [clearTimer] = useClearTimerMutation()
   const openTimePicker = (field: 'startTime' | 'endTime') => {
@@ -53,6 +53,7 @@ export const TimeField = ({
 
   const handleModeToggle = () => {
     if (isTimerMode && isTimerActive) {
+      console.log(timer)
       clearTimer()
     }
     setIsTimerMode(prev => !prev);
