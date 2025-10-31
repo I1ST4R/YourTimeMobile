@@ -1,22 +1,22 @@
 import { Text, TouchableOpacity, View } from 'react-native';
 import tw from 'twrnc';
-import { calculateDuration, dateToString, stringToDate } from '../timeHelpers';
+import { dateToString, stringToDate } from '../timeHelpers';
 import React, { useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUpdateIntervalMutation } from '../slices/interval/intervalsApi';
 
 type DateDurationFieldProps = {
   date: string;
-  startTime: string,
-  endTime: string,
+  duration: string,
+  isDifDays: boolean,
   intervalId: string;
   isTimerActive: boolean;
 };
 
 export const DateDurationField = ({
   date,
-  startTime,
-  endTime,
+  duration,
+  isDifDays,
   intervalId,
   isTimerActive
 }: DateDurationFieldProps) => {
@@ -34,7 +34,6 @@ export const DateDurationField = ({
   };
 
   const selectedDate = stringToDate(currentDate);
-  const [duration, isDifDays] = calculateDuration(startTime, endTime);
 
   const handleDateChange = (event: any, dateToChange?: Date) => {
     setShowDatePicker(false);

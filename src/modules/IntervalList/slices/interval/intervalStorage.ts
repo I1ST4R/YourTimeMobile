@@ -62,6 +62,25 @@ export const TimeIntervalStorage = {
     }
   },
 
+  getAllIntervals: async (): Promise<IntervalType[]> => {
+    try {
+      const intervalIds = await TimeIntervalStorage.getAllIntervalsId();
+      const intervals: IntervalType[] = [];
+      
+      for (const id of intervalIds) {
+        const interval = await TimeIntervalStorage.getIntervalById(id);
+        if (interval) {
+          intervals.push(interval);
+        }
+      }
+      
+      return intervals;
+    } catch (error) {
+      console.error('Error getting all intervals:', error);
+      return [];
+    }
+  },
+
   addInterval: async (interval: IntervalType): Promise<boolean> => {
     try {
       const validatedInterval = validateData(interval, intervalSchema);

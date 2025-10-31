@@ -6,6 +6,7 @@ import { TimerType } from '../slices/timer/timerStorage';
 import { useUpdateIntervalMutation } from '../slices/interval/intervalsApi';
 import { TimerField } from './TimerField';
 import { useClearTimerMutation } from '../slices/timer/timerApi';
+import { calculateDuration } from '../timeHelpers';
 
 type TimeFieldProps = {
   startTime: string,
@@ -32,18 +33,28 @@ export const TimeField = ({
   };
 
   const handleChange = (time: string) => {
-    if(editingField === 'startTime') updateInterval({
-      id: intervalId,
-      interval : {
-        startTime: time
-      }
-    })
-    if(editingField === 'endTime') updateInterval({
-      id: intervalId,
-      interval : {
-        endTime: time
-      }
-    })
+    if(editingField === 'startTime'){
+      const [duration, isDifDays] = calculateDuration(time, endTime);
+      updateInterval({
+        id: intervalId,
+        interval : {
+          startTime: time,
+          duration: duration,
+          isDifDays: isDifDays
+        }
+      })
+    } 
+    if(editingField === 'endTime'){
+      const [duration, isDifDays] = calculateDuration(startTime, time);
+      updateInterval({
+        id: intervalId,
+        interval : {
+          startTime: time,
+          duration: duration,
+          isDifDays: isDifDays
+        }
+      })
+    } 
   }
 
   const handleTimePickerClose = () => {

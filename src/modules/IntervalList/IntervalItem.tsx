@@ -69,8 +69,8 @@ const IntervalItem = ({ intervalId }: IntervalItemProps) => {
         <View style={tw`flex-1`}>
           <DateDurationField
             date={interval.date}
-            startTime={interval.startTime}
-            endTime={interval.endTime}
+            duration={interval.duration}
+            isDifDays={interval.isDifDays}
             intervalId={intervalId}
             isTimerActive = {Boolean(timer)}
           />
