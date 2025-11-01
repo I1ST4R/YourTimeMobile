@@ -18,26 +18,11 @@ export const categoriesApi = createApi({
       providesTags: ['Category'],
     }),
 
-    getCategoryById: builder.query<CategoryType, string>({
-      queryFn: async (id) => {
-        try {
-          const category = await CategoryStorage.getCategoryById(id);
-          if (!category) {
-            return { error: 'Category not found' };
-          }
-          return { data: category };
-        } catch (error) {
-          return { error: error instanceof Error ? error.message : 'Failed to get category' };
-        }
-      },
-      providesTags: (result, error, id) => [{ type: 'Category', id }],
-    }),
-
-    addCategory: builder.mutation<{ success: boolean }, CategoryType>({
+    addCategory: builder.mutation<boolean, CategoryType>({
       queryFn: async (categoryData) => {
         try {
           const success = await CategoryStorage.addCategory(categoryData);
-          return { data: { success } };
+          return { data: success };
         } catch (error) {
           return { error: error instanceof Error ? error.message : 'Failed to add category' };
         }
@@ -45,25 +30,25 @@ export const categoriesApi = createApi({
       invalidatesTags: ['Category'],
     }),
 
-    updateCategory: builder.mutation<{ success: boolean }, { id: string; category: Partial<CategoryType> }>({
-      queryFn: async ({ id, category }) => {
+    deleteCategory: builder.mutation<boolean, string>({
+      queryFn: async (name) => {
         try {
-          const success = await CategoryStorage.updateCategory(id, category);
-          return { data: { success } };
-        } catch (error) {
-          return { error: error instanceof Error ? error.message : 'Failed to update category' };
-        }
-      },
-      invalidatesTags: (result, error, { id }) => [{ type: 'Category', id }],
-    }),
-
-    deleteCategory: builder.mutation<{ success: boolean }, string>({
-      queryFn: async (id) => {
-        try {
-          const success = await CategoryStorage.deleteCategory(id);
-          return { data: { success } };
+          const success = await CategoryStorage.deleteCategory(name);
+          return { data: success };
         } catch (error) {
           return { error: error instanceof Error ? error.message : 'Failed to delete category' };
+        }
+      },
+      invalidatesTags: ['Category'],
+    }),
+
+    saveAllCategories: builder.mutation<boolean, CategoryType[]>({
+      queryFn: async (categories) => {
+        try {
+          const success = await CategoryStorage.saveAllCategories(categories);
+          return { data: success };
+        } catch (error) {
+          return { error: error instanceof Error ? error.message : 'Failed to save categories' };
         }
       },
       invalidatesTags: ['Category'],
@@ -73,8 +58,7 @@ export const categoriesApi = createApi({
 
 export const {
   useGetAllCategoriesQuery,
-  useGetCategoryByIdQuery,
   useAddCategoryMutation,
-  useUpdateCategoryMutation,
   useDeleteCategoryMutation,
+  useSaveAllCategoriesMutation,
 } = categoriesApi;

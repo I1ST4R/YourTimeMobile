@@ -1,5 +1,5 @@
 // screens/Analysis.tsx
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Dimensions,
@@ -65,7 +65,7 @@ const AnalysisBody = () => {
   const {data: intervals = [], isLoading, error, refetch } = useGetAllIntervalsQuery();
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       refetch();
     }, [refetch]),
   );

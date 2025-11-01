@@ -15,6 +15,7 @@ const CategoryList = () => {
   const [searchQuery, setSearchQuery] = useState('')
   
   const { data: categories = [], isLoading, error } = useGetAllCategoriesQuery();
+  
   const [addCategory, { isLoading: isAdding }] = useAddCategoryMutation();
 
   const filteredCategories = useMemo(() => {
@@ -86,7 +87,7 @@ const CategoryList = () => {
         <FlatList
           data={filteredCategories}
           keyExtractor={(item) => item.name}
-          renderItem={({ item }) => <CategoryItem category={item} />}
+          renderItem={({ item }) => <CategoryItem category={item}/>}
           showsVerticalScrollIndicator={false}
         />
       ) : (

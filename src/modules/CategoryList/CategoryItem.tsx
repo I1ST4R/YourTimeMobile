@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text } from 'react-native';
 import tw from 'twrnc';
-import { useUpdateCategoryMutation, useDeleteCategoryMutation } from './category/categoriesApi';
+import { useDeleteCategoryMutation } from './category/categoriesApi';
 import { CategoryType } from './category/categoryStorage';
 
 
@@ -9,18 +9,7 @@ export const CategoryItem = ({ category }: { category: CategoryType }) => {
   const [categoryName, setCategoryName] = useState(category.name);
   const [isEditing, setIsEditing] = useState(false);
   
-  const [updateCategory] = useUpdateCategoryMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
-
-  const handleUpdate = () => {
-    if (categoryName.trim() !== '' && categoryName !== category.name) {
-      updateCategory({
-        id: category.name,
-        category: { name: categoryName.trim() },
-      });
-    }
-    setIsEditing(false);
-  };
 
   const handleInputChange = (text: string) => {
     setCategoryName(text);
@@ -38,15 +27,6 @@ export const CategoryItem = ({ category }: { category: CategoryType }) => {
         placeholder="Название категории"
         placeholderTextColor="#808080"
       />
-
-      {isEditing && (
-        <TouchableOpacity
-          onPress={handleUpdate}
-          style={tw`bg-green-500 rounded-lg p-3 mr-4 w-12 h-12 justify-center items-center`}
-        >
-          <Text style={tw`text-white font-bold text-lg`}>✓</Text>
-        </TouchableOpacity>
-      )}
 
       <TouchableOpacity
         onPress={() => deleteCategory(category.name)}
