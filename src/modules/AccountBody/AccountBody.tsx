@@ -1,93 +1,89 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  TextInput, 
-  Button, 
-  Text, 
-  TouchableOpacity, 
+import React, { useState} from 'react';
+import {
+  View,
+  TextInput,
+  Button,
+  Text,
+  TouchableOpacity,
   Modal,
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform 
+  Platform,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { 
-  useRegisterMutation, 
-  useLoginMutation, 
-  useLogoutMutation, 
+import {
+  useRegisterMutation,
+  useLoginMutation,
+  useLogoutMutation,
   useGetCurrentUserQuery,
   useSaveUserDataMutation,
   useGetUserDataMutation,
-  useCheckUserDataQuery 
+  useCheckUserDataQuery,
 } from './user/userApi';
 import { userSchema, UserInput } from './user/userApi';
 import tw from 'twrnc';
 
 export const AccountBody = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [modalMode, setModalMode] = useState<'save' | 'load'>('save');
   const [encryptionKey, setEncryptionKey] = useState('');
-  
+
   const [register] = useRegisterMutation();
   const [login] = useLoginMutation();
   const [logout] = useLogoutMutation();
   const [saveUserData, { isLoading: isSaving }] = useSaveUserDataMutation();
   const [getUserData, { isLoading: isLoading }] = useGetUserDataMutation();
-  
-  const { data: currentUser } = useGetCurrentUserQuery(undefined, {
-    skip: !isAuthenticated
-  });
+
+  const { data: currentUser, isLoading: isUserLoading } = useGetCurrentUserQuery();
 
   const { data: userDataInfo } = useCheckUserDataQuery(undefined, {
-    skip: !isAuthenticated,
-    pollingInterval: 30000
+    pollingInterval: 30000,
   });
-  
-  const { 
+
+  const {
     control,
-    handleSubmit, 
+    handleSubmit,
     formState: { errors },
-    reset
+    reset,
   } = useForm<UserInput>({
     resolver: zodResolver(userSchema),
     defaultValues: {
       login: '',
-      password: ''
-    }
+      password: '',
+    },
   });
 
-  // Проверяем авторизацию при загрузке
-  useEffect(() => {
-    // Проверка токена
-  }, []);
-
-  const onSubmit = async (data: UserInput) => {
-    try {
-      if (isLogin) {
-        await login(data).unwrap();
-      } else {
-        await register(data).unwrap();
-      }
-      setIsAuthenticated(true);
-      reset();
-    } catch (error) {
-      console.error('Auth error:', error);
-      Alert.alert('Ошибка', 'Не удалось выполнить вход/регистрацию');
+  const onSubmit = (data: UserInput) => {
+    if (isLogin) {
+      login(data)
+        .unwrap()
+        .then(() => {
+          reset();
+        })
+        .catch(() => {
+          Alert.alert('Ошибка', 'Не удалось выполнить вход');
+        });
+    } else {
+      register(data)
+        .unwrap()
+        .then(() => {
+          reset();
+        })
+        .catch(() => {
+          Alert.alert('Ошибка', 'Не удалось выполнить регистрацию');
+        });
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout().unwrap();
-      setIsAuthenticated(false);
-      setEncryptionKey('');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogout = () => {
+    logout()
+      .unwrap()
+      .then(() => {
+        setEncryptionKey('');
+      });
   };
 
   const handleSaveData = () => {
@@ -102,27 +98,34 @@ export const AccountBody = () => {
     setEncryptionKey('');
   };
 
-  const handleKeySubmit = async () => {
+  const handleKeySubmit = () => {
     if (!encryptionKey.trim()) {
       Alert.alert('Ошибка', 'Введите ключ шифрования');
       return;
     }
 
-    try {
-      if (modalMode === 'save') {
-        const result = await saveUserData({ encryptionKey }).unwrap();
-        Alert.alert('Успех', result.message || 'Данные успешно сохранены на сервер');
-      } else {
-        const result = await getUserData({ encryptionKey }).unwrap();
-        Alert.alert(
-          'Успех', 
-          `Загружено ${result.intervals.length} интервалов`
-        );
-      }
-      setShowKeyModal(false);
-      setEncryptionKey('');
-    } catch (error: any) {
-      Alert.alert('Ошибка', error.error || 'Произошла ошибка при работе с данными');
+    if (modalMode === 'save') {
+      saveUserData({ encryptionKey })
+        .unwrap()
+        .then(result => {
+          Alert.alert('Успех', result.message || 'Данные успешно сохранены на сервер');
+          setShowKeyModal(false);
+          setEncryptionKey('');
+        })
+        .catch((error: any) => {
+          Alert.alert('Ошибка', error.error || 'Произошла ошибка при сохранении данных');
+        });
+    } else {
+      getUserData({ encryptionKey })
+        .unwrap()
+        .then(result => {
+          Alert.alert('Успех', `Загружено ${result.intervals.length} интервалов`);
+          setShowKeyModal(false);
+          setEncryptionKey('');
+        })
+        .catch((error: any) => {
+          Alert.alert('Ошибка', error.error || 'Произошла ошибка при загрузке данных');
+        });
     }
   };
 
@@ -131,11 +134,18 @@ export const AccountBody = () => {
     setEncryptionKey('');
   };
 
-  // Если пользователь авторизован - показываем кнопки
-  if (isAuthenticated) {
+  if (isUserLoading) {
+    return (
+      <View style={tw`flex-1 justify-center items-center`}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+        <Text style={tw`mt-4 text-gray-600`}>Загрузка...</Text>
+      </View>
+    );
+  }
+
+  if (currentUser) {
     return (
       <View style={tw`p-5`}>
-        {/* Модалка рендерится только когда showKeyModal = true */}
         {showKeyModal && (
           <Modal
             visible={showKeyModal}
@@ -143,7 +153,7 @@ export const AccountBody = () => {
             transparent={true}
             onRequestClose={handleCloseModal}
           >
-            <KeyboardAvoidingView 
+            <KeyboardAvoidingView
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
               style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}
             >
@@ -151,13 +161,13 @@ export const AccountBody = () => {
                 <Text style={tw`text-lg font-bold mb-4 text-center`}>
                   {modalMode === 'save' ? 'Сохранение данных' : 'Загрузка данных'}
                 </Text>
-                
+
                 <Text style={tw`text-sm text-gray-600 mb-4 text-center`}>
-                  {modalMode === 'save' 
+                  {modalMode === 'save'
                     ? 'Введите ключ для шифрования данных. Запомните его для восстановления на другом устройстве.'
                     : 'Введите ключ для расшифровки данных.'}
                 </Text>
-                
+
                 <TextInput
                   placeholder="Ключ шифрования"
                   placeholderTextColor="#6b7280"
@@ -169,16 +179,16 @@ export const AccountBody = () => {
                   returnKeyType="done"
                   onSubmitEditing={handleKeySubmit}
                 />
-                
+
                 <View style={tw`flex-row justify-between`}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={tw`flex-1 bg-gray-300 py-3 rounded mr-2`}
                     onPress={handleCloseModal}
                   >
                     <Text style={tw`text-center font-semibold`}>Отмена</Text>
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity 
+
+                  <TouchableOpacity
                     style={tw`flex-1 bg-blue-500 py-3 rounded ml-2`}
                     onPress={handleKeySubmit}
                     disabled={isSaving || isLoading}
@@ -196,18 +206,18 @@ export const AccountBody = () => {
             </KeyboardAvoidingView>
           </Modal>
         )}
-        
+
         <Text style={tw`text-center text-lg font-bold mb-2`}>
-          Добро пожаловать, {currentUser?.login}!
+          Добро пожаловать, {currentUser.login}!
         </Text>
-        
+
         {userDataInfo?.hasData && (
           <Text style={tw`text-center text-green-600 mb-4`}>
             ✓ На сервере есть сохраненные данные
           </Text>
         )}
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={tw`bg-green-500 py-3 rounded mb-4 ${isSaving ? 'opacity-50' : ''}`}
           onPress={handleSaveData}
           disabled={isSaving}
@@ -220,8 +230,8 @@ export const AccountBody = () => {
             </Text>
           )}
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={tw`bg-blue-500 py-3 rounded mb-4 ${isLoading ? 'opacity-50' : ''}`}
           onPress={handleLoadData}
           disabled={isLoading}
@@ -234,16 +244,14 @@ export const AccountBody = () => {
             </Text>
           )}
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={tw`bg-red-500 py-3 rounded`}
           onPress={handleLogout}
         >
-          <Text style={tw`text-white text-center font-semibold`}>
-            Выйти
-          </Text>
+          <Text style={tw`text-white text-center font-semibold`}>Выйти</Text>
         </TouchableOpacity>
-        
+
         <Text style={tw`text-xs text-gray-500 mt-6 text-center`}>
           При сохранении данные шифруются вашим ключом.{'\n'}
           Сервер хранит только зашифрованную информацию.
@@ -252,11 +260,10 @@ export const AccountBody = () => {
     );
   }
 
-  // Если не авторизован - показываем форму
   return (
     <View style={tw`p-5`}>
       <View style={tw`flex-row justify-center mb-6`}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={tw`flex-1 py-3 ${isLogin ? 'bg-blue-500' : 'bg-gray-300'} rounded-l`}
           onPress={() => setIsLogin(true)}
         >
@@ -264,7 +271,7 @@ export const AccountBody = () => {
             Вход
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={tw`flex-1 py-3 ${!isLogin ? 'bg-blue-500' : 'bg-gray-300'} rounded-r`}
           onPress={() => setIsLogin(false)}
         >
@@ -290,7 +297,7 @@ export const AccountBody = () => {
       {errors.login && (
         <Text style={tw`text-red-500 mb-2`}>{errors.login.message}</Text>
       )}
-      
+
       <Controller
         control={control}
         name="password"
@@ -308,10 +315,10 @@ export const AccountBody = () => {
       {errors.password && (
         <Text style={tw`text-red-500 mb-4`}>{errors.password.message}</Text>
       )}
-      
-      <Button 
-        title={isLogin ? "Войти" : "Зарегистрироваться"} 
-        onPress={handleSubmit(onSubmit)} 
+
+      <Button
+        title={isLogin ? 'Войти' : 'Зарегистрироваться'}
+        onPress={handleSubmit(onSubmit)}
       />
     </View>
   );
