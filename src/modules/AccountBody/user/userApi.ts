@@ -42,6 +42,8 @@ export const userApi = createApi({
     },
   }),
   tagTypes: ['User', 'UserData'],
+  keepUnusedDataFor: 0,
+  refetchOnMountOrArgChange: true,
   endpoints: builder => ({
     register: builder.mutation<AuthResponse, UserInput>({
       query: userData => {
@@ -52,10 +54,11 @@ export const userApi = createApi({
           body: validatedData,
         };
       },
-      async onQueryStarted(arg, { queryFulfilled }) {
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           const { data } = await queryFulfilled;
           await AsyncStorage.setItem('auth_token', data.token);
+          dispatch(userApi.util.invalidateTags(['User']));
         } catch {}
       },
       invalidatesTags: ['User'],
@@ -70,17 +73,45 @@ export const userApi = createApi({
           body: validatedData,
         };
       },
-      async onQueryStarted(arg, { queryFulfilled }) {
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           const { data } = await queryFulfilled;
           await AsyncStorage.setItem('auth_token', data.token);
+          dispatch(userApi.util.invalidateTags(['User']));
         } catch {}
       },
       invalidatesTags: ['User'],
     }),
 
-    getCurrentUser: builder.query<User, void>({
-      query: () => '/users/me',
+    getCurrentUser: builder.query<User | null, void>({
+      queryFn: async () => {
+        try {
+          const token = await AsyncStorage.getItem('auth_token');
+          if (!token) {
+            return { data: null };
+          }
+          
+          const response = await fetch('http://192.168.0.104:3001/users/me', {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              await AsyncStorage.removeItem('auth_token');
+            }
+            return { data: null };
+          }
+          
+          const user = await response.json();
+          return { data: user };
+        } catch (error) {
+          console.log(error)
+          return { data: null };
+        }
+      },
       providesTags: ['User'],
     }),
 
@@ -89,7 +120,7 @@ export const userApi = createApi({
         await AsyncStorage.removeItem('auth_token');
         return { data: null };
       },
-      invalidatesTags: ['User'],
+      invalidatesTags: ['User', 'UserData'],
     }),
 
     saveUserData: builder.mutation<

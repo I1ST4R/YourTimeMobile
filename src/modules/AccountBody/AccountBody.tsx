@@ -37,7 +37,7 @@ export const AccountBody = () => {
   const [saveUserData, { isLoading: isSaving }] = useSaveUserDataMutation();
   const [getUserData, { isLoading: isLoading }] = useGetUserDataMutation();
 
-  const { data: currentUser, isLoading: isUserLoading } = useGetCurrentUserQuery();
+  const { data: currentUser, isLoading: isUserLoading, refetch } = useGetCurrentUserQuery();
 
   const { data: userDataInfo } = useCheckUserDataQuery(undefined, {
     pollingInterval: 30000,
@@ -62,6 +62,7 @@ export const AccountBody = () => {
         .unwrap()
         .then(() => {
           reset();
+          refetch();
         })
         .catch(() => {
           Alert.alert('Ошибка', 'Не удалось выполнить вход');
@@ -71,6 +72,7 @@ export const AccountBody = () => {
         .unwrap()
         .then(() => {
           reset();
+          refetch();
         })
         .catch(() => {
           Alert.alert('Ошибка', 'Не удалось выполнить регистрацию');
@@ -83,6 +85,7 @@ export const AccountBody = () => {
       .unwrap()
       .then(() => {
         setEncryptionKey('');
+        refetch();
       });
   };
 
@@ -103,7 +106,7 @@ export const AccountBody = () => {
       Alert.alert('Ошибка', 'Введите ключ шифрования');
       return;
     }
-
+  
     if (modalMode === 'save') {
       saveUserData({ encryptionKey })
         .unwrap()
@@ -119,7 +122,18 @@ export const AccountBody = () => {
       getUserData({ encryptionKey })
         .unwrap()
         .then(result => {
-          Alert.alert('Успех', `Загружено ${result.intervals.length} интервалов`);
+          let message = '';
+          if (result.intervals.length > 0 && result.categories.length > 0) {
+            message = `Загружено ${result.intervals.length} интервалов и ${result.categories.length} категорий`;
+          } else if (result.intervals.length > 0) {
+            message = `Загружено ${result.intervals.length} интервалов`;
+          } else if (result.categories.length > 0) {
+            message = `Загружено ${result.categories.length} категорий`;
+          } else {
+            message = 'Нет данных для загрузки';
+          }
+          
+          Alert.alert('Успех', message);
           setShowKeyModal(false);
           setEncryptionKey('');
         })
@@ -306,7 +320,7 @@ export const AccountBody = () => {
             placeholder="Пароль"
             placeholderTextColor="#6b7280"
             secureTextEntry
-            style={tw`border border-gray-300 mb-2 p-3 rounded bg-white`}
+            style={tw`border border-gray-300 mb-2 p-3 rounded bg-white text-black`}
             value={value}
             onChangeText={onChange}
           />
@@ -322,4 +336,4 @@ export const AccountBody = () => {
       />
     </View>
   );
-};
+}
