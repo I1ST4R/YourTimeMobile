@@ -8,6 +8,7 @@ import tw from 'twrnc';
 import Interval from '../screens/Interval';
 import Category from '../screens/Category';
 import Analysis from '../screens/Analysis';
+import { Account } from '../screens/Account';
 
 const Tab = createBottomTabNavigator();
 
@@ -36,6 +37,11 @@ export default function App() {
             name="Анализ" 
             component={Analysis}
             options={{ tabBarLabel: 'Анализ' }}
+          />
+          <Tab.Screen 
+            name="Аккаунт" 
+            component={Account}
+            options={{ tabBarLabel: 'Аккаунт' }}
           />
         </Tab.Navigator>
       </NavigationContainer>

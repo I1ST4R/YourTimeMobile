@@ -1,6 +1,6 @@
 {
   "extends": "@react-native/typescript-config",
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "backend/server.js", "backend/authMiddleware.js"],
   "exclude": ["**/node_modules", "**/Pods"],
   "compilerOptions": {
     "typeRoots": ["./types", "./node_modules/@types"]
