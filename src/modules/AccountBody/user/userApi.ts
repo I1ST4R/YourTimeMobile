@@ -5,13 +5,13 @@ import { validateData } from '../../../shared/helpers/validation';
 import { TimeIntervalStorage } from '../../IntervalList/slices/interval/intervalStorage';
 import { encryptData, decryptData } from './crypt';
 
-
-
 export const userSchema = z.object({
-  login: z.string()
+  login: z
+    .string()
     .min(3, 'Логин должен содержать минимум 3 символа')
     .max(30, 'Логин слишком длинный'),
-  password: z.string()
+  password: z
+    .string()
     .min(6, 'Пароль должен содержать минимум 6 символов')
     .max(50, 'Пароль слишком длинный'),
 });
@@ -42,16 +42,16 @@ export const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery: fetchBaseQuery({
     baseUrl: 'http://192.168.0.104:3001',
-    prepareHeaders: async (headers) => {
+    prepareHeaders: async headers => {
       const token = await AsyncStorage.getItem('auth_token');
       if (token) headers.set('authorization', `Bearer ${token}`);
       return headers;
     },
   }),
   tagTypes: ['User', 'UserData'],
-  endpoints: (builder) => ({
+  endpoints: builder => ({
     register: builder.mutation<AuthResponse, UserInput>({
-      query: (userData) => {
+      query: userData => {
         const validatedData = validateData(userData, userSchema);
         return {
           url: '/auth/register',
@@ -71,10 +71,10 @@ export const userApi = createApi({
     }),
 
     login: builder.mutation<AuthResponse, UserInput>({
-      query: (loginData) => {
+      query: loginData => {
         const validatedData = validateData(loginData, userSchema);
         return {
-          url: '/auth/login', 
+          url: '/auth/login',
           method: 'POST',
           body: validatedData,
         };
@@ -103,33 +103,36 @@ export const userApi = createApi({
       invalidatesTags: ['User'],
     }),
 
-    // Сохранение зашифрованных данных
-    saveUserData: builder.mutation<{ success: boolean; message: string }, { encryptionKey: string }>({
+    saveUserData: builder.mutation<
+      { success: boolean; message: string },
+      { encryptionKey: string }
+    >({
       queryFn: async ({ encryptionKey }) => {
         try {
-          // Получаем все интервалы
           const intervals = await TimeIntervalStorage.getAllIntervals();
-          
+
           if (!intervals || intervals.length === 0) {
-            return { 
-              data: { 
-                success: true, 
-                message: 'Нет данных для сохранения' 
-              } 
+            return {
+              data: {
+                success: true,
+                message: 'Нет данных для сохранения',
+              },
             };
           }
 
           const intervalsJSON = JSON.stringify(intervals);
           const encryptedData = encryptData(intervalsJSON, encryptionKey);
-          
+
           // Отправляем на сервер
           const response = await fetch('http://192.168.0.104:3001/user/data', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await AsyncStorage.getItem('auth_token')}`
+              Authorization: `Bearer ${await AsyncStorage.getItem(
+                'auth_token',
+              )}`,
             },
-            body: JSON.stringify({ data: encryptedData })
+            body: JSON.stringify({ data: encryptedData }),
           });
 
           if (!response.ok) {
@@ -139,61 +142,104 @@ export const userApi = createApi({
           const result = await response.json();
           return { data: result };
         } catch (error: any) {
-          return { 
-            error: { 
-              status: 'CUSTOM_ERROR', 
-              error: error.message 
-            } 
+          return {
+            error: {
+              status: 'CUSTOM_ERROR',
+              error: error.message,
+            },
           };
         }
       },
       invalidatesTags: ['UserData'],
     }),
 
-    // Получение и расшифровка данных
-    getUserData: builder.mutation<{ success: boolean; intervals: any[] }, { encryptionKey: string }>({
-      queryFn: async ({ encryptionKey }) => {
+    getUserData: builder.mutation<
+      { success: boolean; intervals: any[]; message: string },
+      { encryptionKey: string }
+    >({
+      queryFn: async ({ encryptionKey }, _api, _extraOptions, baseQuery) => {
         try {
-          // Получаем данные с сервера
+          // 1. Получаем данные с сервера
+          const token = await AsyncStorage.getItem('auth_token');
           const response = await fetch('http://192.168.0.104:3001/user/data', {
             headers: {
-              'Authorization': `Bearer ${await AsyncStorage.getItem('auth_token')}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           });
 
           if (!response.ok) {
             throw new Error('Ошибка при получении данных с сервера');
           }
 
-          const serverData: UserDataResponse = await response.json();
-          
-          if (!serverData.data) {
-            return { 
-              data: { 
-                success: true, 
+          // Сначала парсим JSON ответ
+          const serverResponse = await response.json();
+          const encryptedData = serverResponse.data; // ← берем поле data из JSON
+
+          if (!encryptedData) {
+            return {
+              data: {
+                success: true,
                 intervals: [],
-                message: 'На сервере нет сохраненных данных'
-              } 
+                message: 'На сервере нет сохраненных данных',
+              },
             };
           }
 
-          // Расшифровываем данные используя импортированную функцию
-          const decryptedIntervals = decryptData(serverData.data, encryptionKey);
-          // Сохраняем интервалы
-          // await TimeIntervalStorage.setAllIntervals(decryptedIntervals);
-          
-          return { 
-            data: { 
-              success: true, 
-              intervals: decryptedIntervals 
-            } 
+          // 2. Расшифровываем и сохраняем локально
+          // 2. Расшифровываем и сохраняем локально
+          const decryptedDataString = decryptData(encryptedData, encryptionKey);
+          console.log('🔍 Raw decrypted string:', decryptedDataString);
+
+          // Первый парсинг - убираем экранирование
+          const unescapedString = JSON.parse(decryptedDataString);
+          console.log('🔍 After first parse:', unescapedString);
+          console.log('🔍 Type after first parse:', typeof unescapedString);
+
+          // Второй парсинг - получаем массив
+          const decryptedIntervals = JSON.parse(unescapedString);
+          console.log('🔍 Final intervals:', decryptedIntervals);
+          console.log('🔍 Is array?', Array.isArray(decryptedIntervals));
+
+          const saveResult = await TimeIntervalStorage.addIntervals(
+            decryptedIntervals,
+          );
+
+          if (!saveResult) {
+            throw new Error('Ошибка при сохранении данных локально');
+          }
+
+          // 3. Удаляем данные с сервера только если локальное сохранение успешно
+          const deleteResponse = await fetch(
+            'http://192.168.0.104:3001/user/data',
+            {
+              method: 'DELETE',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          if (!deleteResponse.ok) {
+            console.warn(
+              'Не удалось удалить данные с сервера, но локальные данные сохранены',
+            );
+          }
+
+          return {
+            data: {
+              success: true,
+              intervals: decryptedIntervals,
+              message: deleteResponse.ok
+                ? 'Данные успешно загружены и удалены с сервера'
+                : 'Данные загружены, но не удалены с сервера',
+            },
           };
         } catch (error: any) {
-          return { 
-            error: { 
-              status: 'CUSTOM_ERROR', 
-              error: error.message 
-            } 
+          return {
+            error: {
+              status: 'CUSTOM_ERROR',
+              error: error.message,
+            },
           };
         }
       },
@@ -201,7 +247,10 @@ export const userApi = createApi({
     }),
 
     // Удаление данных с сервера
-    deleteUserData: builder.mutation<{ success: boolean; message: string }, void>({
+    deleteUserData: builder.mutation<
+      { success: boolean; message: string },
+      void
+    >({
       query: () => ({
         url: '/user/data',
         method: 'DELETE',
@@ -213,7 +262,7 @@ export const userApi = createApi({
     checkUserData: builder.query<{ hasData: boolean }, void>({
       query: () => '/user/data',
       transformResponse: (response: UserDataResponse) => ({
-        hasData: !!response.data
+        hasData: !!response.data,
       }),
       providesTags: ['UserData'],
     }),
@@ -222,7 +271,7 @@ export const userApi = createApi({
 
 export const {
   useRegisterMutation,
-  useLoginMutation, 
+  useLoginMutation,
   useGetCurrentUserQuery,
   useLogoutMutation,
   useSaveUserDataMutation,

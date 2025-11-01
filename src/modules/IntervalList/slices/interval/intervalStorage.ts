@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
-import { validateData } from '../../../../shared/helpers/validation';
+import { validateArray, validateData } from '../../../../shared/helpers/validation';
 import { categorySchema } from '../../../CategoryList/category/categoryStorage';
 
 export const timeSchema = z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/, {
@@ -55,6 +55,7 @@ export const TimeIntervalStorage = {
   getAllIntervalsId: async (): Promise<string[]> => {
     try {
       const intervals = await AsyncStorage.getItem(INTERVALS_LIST_KEY);
+      console.log('intervals', intervals);
       return intervals ? JSON.parse(intervals) : [];
     } catch (error) {
       console.error('Error getting intervals ids:', error);
@@ -95,6 +96,34 @@ export const TimeIntervalStorage = {
       return true;
     } catch (error) {
       console.error('9. Error in addInterval:', error);
+      return false;
+    }
+  },
+
+  addIntervals: async (intervals: IntervalType[]): Promise<boolean> => {
+    try {
+
+      const validatedIntervals = validateArray(intervals, intervalSchema)
+      if (!validatedIntervals || !Array.isArray(validatedIntervals) || validatedIntervals.length === 0) {
+        console.error('No valid intervals to add');
+        return false;
+      }
+      
+      const curIntervalsIds = await TimeIntervalStorage.getAllIntervalsId();
+      
+      for (const id of curIntervalsIds) {
+        await TimeIntervalStorage.deleteInterval(id);
+      }
+
+      await AsyncStorage.setItem(LAST_ID_KEY, "0")
+
+      for (const interval of validatedIntervals) {
+        await TimeIntervalStorage.addInterval(interval);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in addIntervals:', error);
       return false;
     }
   },
@@ -140,6 +169,20 @@ export const TimeIntervalStorage = {
       return true;
     } catch (error) {
       console.error('Error deleting interval:', error);
+      return false;
+    }
+  },
+
+  deleteAllIntervals: async (): Promise<boolean> => {
+    try {
+      const intervalIds = await TimeIntervalStorage.getAllIntervalsId();
+
+      for (const intervalId of intervalIds) {
+        await TimeIntervalStorage.deleteInterval(intervalId)
+      }
+      return true;
+    } catch (error) {
+      console.error('Error deleting all intervals:', error);
       return false;
     }
   }

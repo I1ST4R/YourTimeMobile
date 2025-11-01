@@ -9,6 +9,7 @@ import IntervalItem from './IntervalItem';
 import tw from 'twrnc';
 import { dateToString, getCurrentTime } from './timeHelpers';
 import { useAddIntervalMutation, useGetIntervalIdsQuery } from './slices/interval/intervalsApi';
+import { TimeIntervalStorage } from './slices/interval/intervalStorage';
 
 const IntervalList = () => {
   const { data: intervalIds = [], isLoading, error } = useGetIntervalIdsQuery();
@@ -29,6 +30,10 @@ const IntervalList = () => {
     }
   };
 
+  const deleteAll = async () => {
+    await TimeIntervalStorage.deleteAllIntervals();
+  }
+
   if (isLoading) {
     return (
       <View style={tw`flex-1 justify-center items-center`}>
@@ -47,6 +52,12 @@ const IntervalList = () => {
 
   return (
     <View style={tw`flex-1`}>
+      <TouchableOpacity 
+        style={tw`bg-red-500 mx-4 my-3 p-3 rounded-lg items-center`}
+        onPress={deleteAll}
+      >
+        <Text style={tw`text-white text-base font-bold`}>удалить все</Text>
+      </TouchableOpacity>
       <TouchableOpacity 
         style={tw`bg-blue-500 mx-4 my-3 p-3 rounded-lg items-center`}
         onPress={handleAddNewInterval}

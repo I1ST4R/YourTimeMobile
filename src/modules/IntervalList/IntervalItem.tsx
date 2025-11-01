@@ -20,7 +20,6 @@ const IntervalItem = ({ intervalId }: IntervalItemProps) => {
   const { data: interval, isLoading } = useGetIntervalByIdQuery(intervalId);
   const [deleteInterval] = useDeleteIntervalMutation();
   const { data: timer } = useGetTimerQuery(intervalId);
-  
   const handleDelete = () => {
     Alert.alert(
       'Удаление интервала',
@@ -43,7 +42,6 @@ const IntervalItem = ({ intervalId }: IntervalItemProps) => {
       </View>
     );
   }
-
   if (!interval) {
     return (
       <View style={tw`bg-white p-3 my-1 mx-2 rounded-lg`}>

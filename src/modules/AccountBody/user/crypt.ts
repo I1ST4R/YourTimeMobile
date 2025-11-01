@@ -29,7 +29,7 @@ export const decryptData = (encryptedData: string, key: string): any => {
     
     // Убираем ключ и парсим JSON
     const dataString = decoded.slice(key.length);
-    return JSON.parse(dataString);
+    return dataString;
   } catch (error) {
     console.error('Decryption error:', error);
     throw new Error('Ошибка при расшифровке данных. Проверьте ключ.');
