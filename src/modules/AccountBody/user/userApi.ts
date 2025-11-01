@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { validateData } from '../../../shared/helpers/validation';
 import { TimeIntervalStorage } from '../../IntervalList/slices/interval/intervalStorage';
 import { encryptData, decryptData } from './crypt';
+import { intervalsApi } from '../../IntervalList/slices/interval/intervalsApi';
 
 export const userSchema = z.object({
   login: z
@@ -208,7 +209,7 @@ export const userApi = createApi({
             throw new Error('Ошибка при сохранении данных локально');
           }
 
-          // 3. Удаляем данные с сервера только если локальное сохранение успешно
+          _api.dispatch(intervalsApi.util.invalidateTags(['Interval']));
           const deleteResponse = await fetch(
             'http://192.168.0.104:3001/user/data',
             {

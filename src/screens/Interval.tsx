@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
 import tw from 'twrnc';
@@ -13,7 +12,7 @@ const Interval = () => {
   const intervalsLength = intervalIds.length;
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-100`}>
+    <View style={tw`flex-1 bg-gray-100`}>
       
       <StatusBar barStyle="dark-content" />
       
@@ -27,7 +26,7 @@ const Interval = () => {
 
       <View style={tw`flex-1`}><IntervalList/></View>
 
-    </SafeAreaView>
+    </View>
   );
 };
 

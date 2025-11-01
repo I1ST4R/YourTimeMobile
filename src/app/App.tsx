@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider } from 'react-redux';
 import { store } from './store'; 
+import { Image } from 'react-native';
 import tw from 'twrnc';
 
 import Interval from '../screens/Interval';
@@ -26,22 +27,70 @@ export default function App() {
           <Tab.Screen 
             name="Интервалы" 
             component={Interval}
-            options={{ tabBarLabel: 'Интервал' }}
+            options={{ 
+              tabBarLabel: 'Интервал',
+              tabBarIcon: ({ focused, color, size }) => (
+                <Image 
+                  source={require('./icons/timer.png')}
+                  style={{ 
+                    width: size, 
+                    height: size,
+                    tintColor: color 
+                  }}
+                />
+              )
+            }}
           />
           <Tab.Screen 
             name="Категории" 
             component={Category}
-            options={{ tabBarLabel: 'Категории' }}
+            options={{ 
+              tabBarLabel: 'Категории',
+              tabBarIcon: ({ focused, color, size }) => (
+                <Image 
+                  source={require('./icons/category.png')}
+                  style={{ 
+                    width: size, 
+                    height: size,
+                    tintColor: color 
+                  }}
+                />
+              )
+            }}
           />
           <Tab.Screen 
             name="Анализ" 
             component={Analysis}
-            options={{ tabBarLabel: 'Анализ' }}
+            options={{ 
+              tabBarLabel: 'Анализ',
+              tabBarIcon: ({ focused, color, size }) => (
+                <Image 
+                  source={require('./icons/analysis.png')}
+                  style={{ 
+                    width: size, 
+                    height: size,
+                    tintColor: color 
+                  }}
+                />
+              )
+            }}
           />
           <Tab.Screen 
             name="Аккаунт" 
             component={Account}
-            options={{ tabBarLabel: 'Аккаунт' }}
+            options={{ 
+              tabBarLabel: 'Аккаунт',
+              tabBarIcon: ({ focused, color, size }) => (
+                <Image 
+                  source={require('./icons/account.png')}
+                  style={{ 
+                    width: size, 
+                    height: size,
+                    tintColor: color 
+                  }}
+                />
+              )
+            }}
           />
         </Tab.Navigator>
       </NavigationContainer>
