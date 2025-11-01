@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import z from 'zod';
-import { validateData } from '../../../shared/helpers/validation';
+import { validateArray, validateData } from '../../../shared/helpers/validation';
 
 export const categorySchema = z.object({
   name: z.string().max(40, "категория слишком длинная")
@@ -112,6 +112,33 @@ export const CategoryStorage = {
       return true;
     } catch (error) {
       console.error('Error adding category:', error);
+      return false;
+    }
+  },
+
+  addAllCategories: async (categories: CategoryType[]): Promise<boolean> => {
+    try {
+      const validatedCategories = validateArray(categories, categorySchema);
+      if (!validatedCategories || !Array.isArray(validatedCategories) || validatedCategories.length === 0) {
+        console.error('No valid categories to add');
+        return false;
+      }
+      
+      const curCategoriesIds = await CategoryStorage.getAllCategoriesIds();
+      
+      for (const id of curCategoriesIds) {
+        await CategoryStorage.deleteCategory(id);
+      }
+  
+      await AsyncStorage.setItem(LAST_CATEGORY_ID_KEY, "0");
+  
+      for (const category of validatedCategories) {
+        await CategoryStorage.addCategory(category);
+      }
+  
+      return true;
+    } catch (error) {
+      console.error('Error in saveAllCategories:', error);
       return false;
     }
   },

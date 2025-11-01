@@ -20,8 +20,7 @@ server.use((req, res, next) => {
   next();
 });
 
-// Эндпоинт для сохранения зашифрованных данных пользователя
-server.put('/user/data', authenticateToken, (req, res) => {
+server.put('/user/intervals', authenticateToken, (req, res) => {
   const db = router.db;
   const userId = req.user.userId;
   const { data } = req.body;
@@ -38,21 +37,18 @@ server.put('/user/data', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    // Обновляем данные пользователя
-    users.find({ id: userId }).assign({ encryptedData: data }).write();
+    users.find({ id: userId }).assign({ encryptedIntervalsData: data }).write();
 
     res.json({ 
       success: true, 
-      message: 'Данные успешно сохранены' 
+      message: 'Интервалы успешно сохранены' 
     });
   } catch (error) {
-    console.error('Error saving user data:', error);
-    res.status(500).json({ error: 'Ошибка при сохранении данных' });
+    res.status(500).json({ error: 'Ошибка при сохранении интервалов' });
   }
 });
 
-// Эндпоинт для получения зашифрованных данных пользователя
-server.get('/user/data', authenticateToken, (req, res) => {
+server.get('/user/intervals', authenticateToken, (req, res) => {
   const db = router.db;
   const userId = req.user.userId;
 
@@ -63,18 +59,15 @@ server.get('/user/data', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    // Возвращаем зашифрованные данные (может быть null/undefined если данных нет)
     res.json({ 
-      data: user.encryptedData || null 
+      data: user.encryptedIntervalsData || null 
     });
   } catch (error) {
-    console.error('Error fetching user data:', error);
-    res.status(500).json({ error: 'Ошибка при получении данных' });
+    res.status(500).json({ error: 'Ошибка при получении интервалов' });
   }
 });
 
-// Эндпоинт для удаления данных пользователя
-server.delete('/user/data', authenticateToken, (req, res) => {
+server.delete('/user/intervals', authenticateToken, (req, res) => {
   const db = router.db;
   const userId = req.user.userId;
 
@@ -86,16 +79,84 @@ server.delete('/user/data', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Пользователь не найден' });
     }
 
-    // Удаляем данные пользователя
-    users.find({ id: userId }).assign({ encryptedData: null }).write();
+    users.find({ id: userId }).assign({ encryptedIntervalsData: null }).write();
 
     res.json({ 
       success: true, 
-      message: 'Данные успешно удалены' 
+      message: 'Интервалы успешно удалены' 
     });
   } catch (error) {
-    console.error('Error deleting user data:', error);
-    res.status(500).json({ error: 'Ошибка при удалении данных' });
+    res.status(500).json({ error: 'Ошибка при удалении интервалов' });
+  }
+});
+
+server.put('/user/categories', authenticateToken, (req, res) => {
+  const db = router.db;
+  const userId = req.user.userId;
+  const { data } = req.body;
+
+  if (!data) {
+    return res.status(400).json({ error: 'Data field is required' });
+  }
+
+  try {
+    const users = db.get('users');
+    const user = users.find({ id: userId }).value();
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    users.find({ id: userId }).assign({ encryptedCategoriesData: data }).write();
+
+    res.json({ 
+      success: true, 
+      message: 'Категории успешно сохранены' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка при сохранении категорий' });
+  }
+});
+
+server.get('/user/categories', authenticateToken, (req, res) => {
+  const db = router.db;
+  const userId = req.user.userId;
+
+  try {
+    const user = db.get('users').find({ id: userId }).value();
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    res.json({ 
+      data: user.encryptedCategoriesData || null 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка при получении категорий' });
+  }
+});
+
+server.delete('/user/categories', authenticateToken, (req, res) => {
+  const db = router.db;
+  const userId = req.user.userId;
+
+  try {
+    const users = db.get('users');
+    const user = users.find({ id: userId }).value();
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    users.find({ id: userId }).assign({ encryptedCategoriesData: null }).write();
+
+    res.json({ 
+      success: true, 
+      message: 'Категории успешно удалены' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка при удалении категорий' });
   }
 });
 
@@ -111,7 +172,8 @@ server.post('/auth/register', hashPassword, (req, res) => {
     id: Date.now(),
     login: req.body.login,
     password: req.body.password,
-    encryptedData: null // Добавляем поле для зашифрованных данных
+    encryptedIntervalsData: null,
+    encryptedCategoriesData: null
   };
   
   db.get('users').push(newUser).write();

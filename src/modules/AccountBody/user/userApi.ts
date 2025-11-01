@@ -3,8 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { z } from 'zod';
 import { validateData } from '../../../shared/helpers/validation';
 import { TimeIntervalStorage } from '../../IntervalList/slices/interval/intervalStorage';
+import { CategoryStorage } from '../../CategoryList/category/categoryStorage';
 import { encryptData, decryptData } from './crypt';
 import { intervalsApi } from '../../IntervalList/slices/interval/intervalsApi';
+import { categoriesApi } from '../../CategoryList/category/categoriesApi';
 
 export const userSchema = z.object({
   login: z
@@ -17,7 +19,6 @@ export const userSchema = z.object({
     .max(50, 'Пароль слишком длинный'),
 });
 
-// Типы
 export type UserInput = z.infer<typeof userSchema>;
 
 export type User = {
@@ -30,15 +31,6 @@ export type AuthResponse = {
   token: string;
 };
 
-export type UserDataResponse = {
-  data: string | null;
-};
-
-export type SaveUserDataRequest = {
-  data: string;
-};
-
-// RTK Query API
 export const userApi = createApi({
   reducerPath: 'userApi',
   baseQuery: fetchBaseQuery({
@@ -64,9 +56,7 @@ export const userApi = createApi({
         try {
           const { data } = await queryFulfilled;
           await AsyncStorage.setItem('auth_token', data.token);
-        } catch {
-          // Токен не сохраняем если ошибка
-        }
+        } catch {}
       },
       invalidatesTags: ['User'],
     }),
@@ -84,9 +74,7 @@ export const userApi = createApi({
         try {
           const { data } = await queryFulfilled;
           await AsyncStorage.setItem('auth_token', data.token);
-        } catch {
-          // Токен не сохраняем если ошибка
-        }
+        } catch {}
       },
       invalidatesTags: ['User'],
     }),
@@ -111,8 +99,9 @@ export const userApi = createApi({
       queryFn: async ({ encryptionKey }) => {
         try {
           const intervals = await TimeIntervalStorage.getAllIntervals();
+          const categories = await CategoryStorage.getAllCategories();
 
-          if (!intervals || intervals.length === 0) {
+          if ((!intervals || intervals.length === 0) && (!categories || categories.length === 0)) {
             return {
               data: {
                 success: true,
@@ -121,27 +110,43 @@ export const userApi = createApi({
             };
           }
 
-          const intervalsJSON = JSON.stringify(intervals);
-          const encryptedData = encryptData(intervalsJSON, encryptionKey);
+          const dataToSave = {
+            intervals: intervals || [],
+            categories: categories || []
+          };
 
-          // Отправляем на сервер
-          const response = await fetch('http://192.168.0.104:3001/user/data', {
+          const dataJSON = JSON.stringify(dataToSave);
+          const encryptedIntervals = encryptData(dataJSON, encryptionKey);
+          const encryptedCategories = encryptData(dataJSON, encryptionKey);
+
+          const intervalsResponse = await fetch('http://192.168.0.104:3001/user/intervals', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${await AsyncStorage.getItem(
-                'auth_token',
-              )}`,
+              Authorization: `Bearer ${await AsyncStorage.getItem('auth_token')}`,
             },
-            body: JSON.stringify({ data: encryptedData }),
+            body: JSON.stringify({ data: encryptedIntervals }),
           });
 
-          if (!response.ok) {
+          const categoriesResponse = await fetch('http://192.168.0.104:3001/user/categories', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${await AsyncStorage.getItem('auth_token')}`,
+            },
+            body: JSON.stringify({ data: encryptedCategories }),
+          });
+
+          if (!intervalsResponse.ok || !categoriesResponse.ok) {
             throw new Error('Ошибка при сохранении данных на сервере');
           }
 
-          const result = await response.json();
-          return { data: result };
+          return { 
+            data: { 
+              success: true, 
+              message: 'Данные успешно сохранены' 
+            } 
+          };
         } catch (error: any) {
           return {
             error: {
@@ -155,84 +160,91 @@ export const userApi = createApi({
     }),
 
     getUserData: builder.mutation<
-      { success: boolean; intervals: any[]; message: string },
+      { success: boolean; intervals: any[]; categories: any[]; message: string },
       { encryptionKey: string }
     >({
-      queryFn: async ({ encryptionKey }, _api, _extraOptions, baseQuery) => {
+      queryFn: async ({ encryptionKey }, _api) => {
         try {
-          // 1. Получаем данные с сервера
           const token = await AsyncStorage.getItem('auth_token');
-          const response = await fetch('http://192.168.0.104:3001/user/data', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+
+          const intervalsResponse = await fetch('http://192.168.0.104:3001/user/intervals', {
+            headers: { Authorization: `Bearer ${token}` },
           });
 
-          if (!response.ok) {
+          const categoriesResponse = await fetch('http://192.168.0.104:3001/user/categories', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (!intervalsResponse.ok || !categoriesResponse.ok) {
             throw new Error('Ошибка при получении данных с сервера');
           }
 
-          // Сначала парсим JSON ответ
-          const serverResponse = await response.json();
-          const encryptedData = serverResponse.data; // ← берем поле data из JSON
+          const intervalsData = await intervalsResponse.json();
+          const categoriesData = await categoriesResponse.json();
 
-          if (!encryptedData) {
+          const encryptedIntervals = intervalsData.data;
+          const encryptedCategories = categoriesData.data;
+
+          if (!encryptedIntervals && !encryptedCategories) {
             return {
               data: {
                 success: true,
                 intervals: [],
+                categories: [],
                 message: 'На сервере нет сохраненных данных',
               },
             };
           }
 
-          // 2. Расшифровываем и сохраняем локально
-          // 2. Расшифровываем и сохраняем локально
-          const decryptedDataString = decryptData(encryptedData, encryptionKey);
-          console.log('🔍 Raw decrypted string:', decryptedDataString);
+          let decryptedIntervals = [];
+          let decryptedCategories = [];
 
-          // Первый парсинг - убираем экранирование
-          const unescapedString = JSON.parse(decryptedDataString);
-          console.log('🔍 After first parse:', unescapedString);
-          console.log('🔍 Type after first parse:', typeof unescapedString);
-
-          // Второй парсинг - получаем массив
-          const decryptedIntervals = JSON.parse(unescapedString);
-          console.log('🔍 Final intervals:', decryptedIntervals);
-          console.log('🔍 Is array?', Array.isArray(decryptedIntervals));
-
-          const saveResult = await TimeIntervalStorage.addIntervals(
-            decryptedIntervals,
-          );
-
-          if (!saveResult) {
-            throw new Error('Ошибка при сохранении данных локально');
+          if (encryptedIntervals) {
+            const decryptedDataString = decryptData(encryptedIntervals, encryptionKey);
+            const unescapedString = JSON.parse(decryptedDataString);
+            const parsedData = JSON.parse(unescapedString);
+            decryptedIntervals = parsedData.intervals || [];
           }
 
-          _api.dispatch(intervalsApi.util.invalidateTags(['Interval']));
-          const deleteResponse = await fetch(
-            'http://192.168.0.104:3001/user/data',
-            {
-              method: 'DELETE',
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-
-          if (!deleteResponse.ok) {
-            console.warn(
-              'Не удалось удалить данные с сервера, но локальные данные сохранены',
-            );
+          if (encryptedCategories) {
+            const decryptedDataString = decryptData(encryptedCategories, encryptionKey);
+            const unescapedString = JSON.parse(decryptedDataString);
+            const parsedData = JSON.parse(unescapedString);
+            decryptedCategories = parsedData.categories || [];
           }
+
+          if (decryptedIntervals.length > 0) {
+            const saveIntervalsResult = await TimeIntervalStorage.addIntervals(decryptedIntervals);
+            if (!saveIntervalsResult) {
+              throw new Error('Ошибка при сохранении интервалов локально');
+            }
+            _api.dispatch(intervalsApi.util.invalidateTags(['Interval']));
+          }
+
+          if (decryptedCategories.length > 0) {
+            const saveCategoriesResult = await CategoryStorage.saveAllCategories(decryptedCategories);
+            if (!saveCategoriesResult) {
+              throw new Error('Ошибка при сохранении категорий локально');
+            }
+            _api.dispatch(categoriesApi.util.invalidateTags(['Category']));
+          }
+
+          await fetch('http://192.168.0.104:3001/user/intervals', {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          await fetch('http://192.168.0.104:3001/user/categories', {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
           return {
             data: {
               success: true,
               intervals: decryptedIntervals,
-              message: deleteResponse.ok
-                ? 'Данные успешно загружены и удалены с сервера'
-                : 'Данные загружены, но не удалены с сервера',
+              categories: decryptedCategories,
+              message: 'Данные успешно загружены и удалены с сервера',
             },
           };
         } catch (error: any) {
@@ -247,22 +259,9 @@ export const userApi = createApi({
       invalidatesTags: ['UserData'],
     }),
 
-    // Удаление данных с сервера
-    deleteUserData: builder.mutation<
-      { success: boolean; message: string },
-      void
-    >({
-      query: () => ({
-        url: '/user/data',
-        method: 'DELETE',
-      }),
-      invalidatesTags: ['UserData'],
-    }),
-
-    // Проверка наличия данных на сервере
     checkUserData: builder.query<{ hasData: boolean }, void>({
-      query: () => '/user/data',
-      transformResponse: (response: UserDataResponse) => ({
+      query: () => '/user/intervals',
+      transformResponse: (response: { data: string | null }) => ({
         hasData: !!response.data,
       }),
       providesTags: ['UserData'],
@@ -277,6 +276,5 @@ export const {
   useLogoutMutation,
   useSaveUserDataMutation,
   useGetUserDataMutation,
-  useDeleteUserDataMutation,
   useCheckUserDataQuery,
 } = userApi;

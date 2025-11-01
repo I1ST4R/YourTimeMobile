@@ -4,7 +4,8 @@
       "id": 1761942313149,
       "login": "VanuaSigma",
       "password": "$2a$10$uFzHbRKotSzoixVE2NMQ4uE4XsdlWEpozDfbLMlC58yIEJpoLTPs2",
-      "encryptedData": null
+      "encryptedIntervalsData": null,
+      "encryptedCategoriesData": null
     }
   ]
 }
