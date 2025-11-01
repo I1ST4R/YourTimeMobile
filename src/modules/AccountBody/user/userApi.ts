@@ -55,11 +55,9 @@ export const userApi = createApi({
         };
       },
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
-        try {
-          const { data } = await queryFulfilled;
-          await AsyncStorage.setItem('auth_token', data.token);
-          dispatch(userApi.util.invalidateTags(['User']));
-        } catch {}
+        const { data } = await queryFulfilled;
+        await AsyncStorage.setItem('auth_token', data.token);
+        dispatch(userApi.util.invalidateTags(['User']));
       },
       invalidatesTags: ['User'],
     }),
