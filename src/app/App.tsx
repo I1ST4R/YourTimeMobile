@@ -10,6 +10,7 @@ import Interval from '../screens/Interval';
 import Category from '../screens/Category';
 import Analysis from '../screens/Analysis';
 import { Account } from '../screens/Account';
+import Docs from '../screens/Docs';
 
 const Tab = createBottomTabNavigator();
 
@@ -83,6 +84,23 @@ export default function App() {
               tabBarIcon: ({ focused, color, size }) => (
                 <Image 
                   source={require('./icons/account.png')}
+                  style={{ 
+                    width: size, 
+                    height: size,
+                    tintColor: color 
+                  }}
+                />
+              )
+            }}
+          />
+          <Tab.Screen 
+            name="Документация" 
+            component={Docs}
+            options={{ 
+              tabBarLabel: 'Docs',
+              tabBarIcon: ({ focused, color, size }) => (
+                <Image 
+                  source={require('./icons/docs.png')}
                   style={{ 
                     width: size, 
                     height: size,
