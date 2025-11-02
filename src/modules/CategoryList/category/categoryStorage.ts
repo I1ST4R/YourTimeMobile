@@ -16,15 +16,21 @@ export const CategoryStorage = {
     try {
       const categoriesJson = await AsyncStorage.getItem(CATEGORIES_LIST_KEY);
       
-      // Добавляем парсинг JSON
       if (!categoriesJson) {
         return [];
       }
       
       const parsedCategories = JSON.parse(categoriesJson);
+      
+      // ДОБАВЬ ЭТУ ПРОВЕРКУ!
+      if (!parsedCategories || !Array.isArray(parsedCategories)) {
+        console.log('Invalid categories format, returning empty array');
+        return [];
+      }
+      
       const validatedCategories = validateArray(parsedCategories, categorySchema)
       
-      if (!validatedCategories || !Array.isArray(validatedCategories) || validatedCategories.length === 0) {
+      if (!validatedCategories || !Array.isArray(validatedCategories)) {
         return [];
       }
       
