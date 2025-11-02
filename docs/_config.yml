@@ -1,3 +1,28 @@
 title: "Your Time"
 description: "Your time is only you business"
 theme: jekyll-theme-cayman
+
+# Настройки для GitHub Pages
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Включить обработку markdown
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+
+# Включить обработку всех файлов
+include:
+  - .well-known
+
+# Исключить файлы, которые не нужно обрабатывать
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
