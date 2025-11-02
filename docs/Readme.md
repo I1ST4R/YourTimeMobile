@@ -1,3 +1,7 @@
+---
+layout: default
+title: Главная
+---
 # Добро пожаловать в Your Time!
 
 > *Your time is only you business.*
@@ -26,8 +30,8 @@
 
 ### Навигация по документации
 
-* [Руководство пользователя](./guide/index.md)
-* [Описание функций](./features/index.md)
+* [Руководство пользователя](./guide/README.md)
+* [Описание функций](./features/README.md)
 
 ---
 
