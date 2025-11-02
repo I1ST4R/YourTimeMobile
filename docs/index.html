@@ -5,19 +5,43 @@
     <title>Your Time - Документация</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 </head>
 <body>
-    <div id="app">ЭЭЭЭЭ эщкере тест</div>
+    <div id="app">
+        <h1>ТЕСТ: Если видишь это - Docsify еще не загрузился</h1>
+        <p>Ждем загрузки README.md...</p>
+    </div>
     
     <script>
+        console.log('Начало загрузки Docsify...');
+        
         window.$docsify = {
             name: 'Your Time',
             repo: 'I1ST4R/YourTimeMobile',
             loadSidebar: false,
-            auto2top: true
-        }
+            auto2top: true,
+            
+            // Колбэки для дебага
+            init: function() {
+                console.log('Docsify инициализирован');
+            }
+        };
+        
+        // Проверяем доступность README.md
+        fetch('./README.md')
+            .then(response => {
+                console.log('README статус:', response.status);
+                return response.text();
+            })
+            .then(text => {
+                console.log('README содержимое (первые 100 символов):', text.substring(0, 100));
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки README:', error);
+            });
     </script>
+    
+    <!-- Подключаем Docsify в конце -->
     <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
 </body>
 </html>
