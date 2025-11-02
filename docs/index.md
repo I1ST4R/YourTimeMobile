@@ -37,5 +37,5 @@ title: Главная
 
 **Связь с разработчиком:**
 
-[![Написать в Telegram](./tg.png)](https://t.me/SSSsTtAaRrr)
+<a href="https://t.me/SSSsTtAaRrr"><img src="./tg.png" alt="Написать в Telegram" style="width: 200px; height: auto;" /></a>
 
